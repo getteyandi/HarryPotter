@@ -1,7 +1,32 @@
+@import "tailwindcss";
+@import "@fontsource/cinzel/400.css";
+@import "@fontsource/cinzel/700.css";
+@import "@fontsource/cinzel/900.css";
+
+/* Custom Component CSS */
+@import "./css/clouds.css";
+@import "./css/birds.css";
+
+@theme {
+    --color-hp-yellow: var(--hp-yellow);
+    --color-hp-gray: var(--hp-gray);
+    --color-hp-darkgray: var(--hp-darkgray);
+    --color-hp-royal: var(--hp-royal);
+    --color-hp-blue: var(--hp-blue);
+    --color-hp-ivory: var(--hp-ivory);
+
+    --text-shadow-yellow:0 0 15px rgba(225,162,55,1);
+    --inset-shadow-innershadow: 0 0 5px rgba(0,0,0,0.25);
+
+    --text-shadow-sectiontitle: 0 4px 4px rgba(0,0,0,0.25);
+    --text-inset-shadow-sectiontitle: 2px 2px 0 rgba(21,16,5,1);
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
+  font-family: 'Cinzel', serif;
   line-height: 1.5;
-  font-weight: 400;
+  /* font-weight: 400; */
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -11,58 +36,13 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --hp-yellow: #DFAA38;
+  --hp-gray: #7C868C;
+  --hp-darkgray: #3A464D;
+  --hp-royal: #041119;
+  --hp-blue: #1C7AA2;
+  --hp-ivory: #E1CBA5;
+
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
