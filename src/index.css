@@ -8,23 +8,35 @@
 @import "./css/birds.css";
 
 @theme {
-    --color-hp-yellow: var(--hp-yellow);
-    --color-hp-gray: var(--hp-gray);
-    --color-hp-darkgray: var(--hp-darkgray);
-    --color-hp-royal: var(--hp-royal);
-    --color-hp-blue: var(--hp-blue);
-    --color-hp-ivory: var(--hp-ivory);
+  --color-hp-yellow: var(--hp-yellow);
+  --color-hp-gray: var(--hp-gray);
+  --color-hp-darkgray: var(--hp-darkgray);
+  --color-hp-royal: var(--hp-royal);
+  --color-hp-blue: var(--hp-blue);
+  --color-hp-ivory: var(--hp-ivory);
+  --color-hp-dark: var(--hp-dark);
 
-    --text-shadow-yellow:0 0 15px rgba(225,162,55,1);
-    --inset-shadow-innershadow: 0 0 5px rgba(0,0,0,0.25);
+  --text-shadow-yellow: 0 0 15px rgba(225, 162, 55, 1);
+  --inset-shadow-innershadow: 0 0 5px rgba(0, 0, 0, 0.25);
 
-    --text-shadow-sectiontitle: 0 4px 4px rgba(0,0,0,0.25);
-    --text-inset-shadow-sectiontitle: 2px 2px 0 rgba(21,16,5,1);
+  --text-shadow-sectiontitle: 0 4px 4px rgba(0, 0, 0, 0.25);
+  --text-inset-shadow-sectiontitle: 2px 2px 0 rgba(21, 16, 5, 1);
+
+  @keyframes widen {
+    0% {
+      width: 50%;
+    }
+    100% {
+      width: 75%;
+    }
+  }
+
+  --animate-widen: widen 0.3s ease-in-out forwards;
 }
 
 :root {
   /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
-  font-family: 'Cinzel', serif;
+  font-family: "Cinzel", serif;
   line-height: 1.5;
   /* font-weight: 400; */
 
@@ -37,12 +49,11 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --hp-yellow: #DFAA38;
-  --hp-gray: #7C868C;
-  --hp-darkgray: #3A464D;
+  --hp-yellow: #dfaa38;
+  --hp-gray: #7c868c;
+  --hp-darkgray: #3a464d;
   --hp-royal: #041119;
-  --hp-blue: #1C7AA2;
-  --hp-ivory: #E1CBA5;
-
+  --hp-blue: #1c7aa2;
+  --hp-ivory: #e1cba5;
+  --hp-dark: #000103;
 }
-
