@@ -12,7 +12,7 @@ export default function Topbar() {
           >
             Home
           </a>
-          <a href="/home">Characters</a>
+          <a href="/characters">Characters</a>
           <a href="/home">Spells</a>
           <a href="/home">Potions</a>
         </div>

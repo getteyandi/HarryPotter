@@ -8,8 +8,6 @@ import SectionTitle from "./components/sectionTitle";
 import SectionDetail from "./components/sectiondetail";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <main className="relative">
       <Topbar />
@@ -24,7 +22,7 @@ function App() {
             reprehenderit non, quod voluptates ipsam aliquid modi
           </p>
 
-          <button className="z-20 bg-hp-royal px-9  py-3 rounded-full mt-6 cursor-pointer font-bold hover:brightness-80 transition-all">
+          <button className="z-20 bg-hp-royal px-9 py-3 rounded-full mt-6 cursor-pointer font-bold hover:brightness-80 transition-all">
             Start Journey
           </button>
         </div>
@@ -51,10 +49,10 @@ function App() {
           </div>
           <img src="public/images/trio.png" className="z-50" />
         </div>
-        <img
-          src="public/images/section2bg.png"
-          className="w-[70%] absolute right-0 bottom-0 opacity-50"
-        />
+      </section>
+
+      <section className="h-screen bg">
+        <div></div>
       </section>
     </main>
   );
