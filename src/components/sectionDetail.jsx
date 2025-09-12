@@ -5,13 +5,16 @@ export default function SectionDetail({
   description,
   buttonText,
   descriptionAllignment = "text-left",
+  descriptionClassName = "",
 }) {
   return (
     <div className="flex flex-col items-start gap-6">
-      <div>
+      <div className={` ${descriptionClassName}`}>
         {title && <h1 className="text-4xl font-bold mt-5">{title}</h1>}
         {description && (
-          <p className={`text-sm text-hp-gray mt-5 ${descriptionAllignment}`}>
+          <p
+            className={` max-w-lg text-sm text-hp-gray mt-5 ${descriptionAllignment}`}
+          >
             {description}
           </p>
         )}
