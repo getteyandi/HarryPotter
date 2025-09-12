@@ -3,7 +3,7 @@ export default function SectionTitle({
   backgroundColor = "bg-hp-royal",
 }) {
   return (
-    <div className="relative flex items-center justify-center ">
+    <div className=" max-w-7xl mx-auto relative flex items-center justify-center ">
       <div className="h-[1px] w-full bg-[linear-gradient(90deg,rgba(74,58,30,0)_0%,#E1CBA5_50%,rgba(74,58,30,0)_100%)]" />
       <div className={`absolute  ${backgroundColor} px-11`}>
         {title && (
