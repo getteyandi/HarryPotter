@@ -1,7 +1,7 @@
 export default function HpCard({ title, imageUrl, className }) {
   return (
     <div className={`group relative [perspective:1000px] ${className}`}>
-      <div className="bg-gradient-to-tr border border-hp-ivory/20 from-hp-royal to-hp-royal/40 pt-3 relative w-full h-full rounded-xl shadow-2xl transition-transform duration-500 group-hover:[transform:rotateX(8deg)_rotateY(0deg)_translateZ(20px)] overflow-hidden">
+      <div className="bg-gradient-to-tr border border-hp-ivory/20 from-hp-royal to-hp-royal/40 relative w-full h-full rounded-xl shadow-2xl transition-transform duration-500 group-hover:[transform:rotateX(8deg)_rotateY(0deg)_translateZ(20px)] overflow-hidden">
         <img
           src={imageUrl}
           alt="Card"

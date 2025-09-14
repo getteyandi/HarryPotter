@@ -8,6 +8,7 @@ import SectionTitle from "./components/sectionTitle";
 import SectionDetail from "./components/sectiondetail";
 import HpButton from "./components/hp-button";
 import HpCard from "./components/hp-card";
+import Deck from "./components/deck";
 
 function App() {
   return (
@@ -23,7 +24,7 @@ function App() {
             Lorem ipsum dolor, sit amet consectetur adipisicing elit. Blanditiis
             reprehenderit non, quod voluptates ipsam aliquid modi
           </p>
-          <HpButton text="Start Journey" className={"mt-6"} />
+          <HpButton text="Open Ledger" className={"mt-6"} />
         </div>
         <Birds />
         <Clouds />
@@ -32,13 +33,15 @@ function App() {
 
       {/* Characters Section */}
       <section className="relative h-screen w-full bg-[linear-gradient(180deg,#041119_8%,#041119_40%,#000103_100%)] py-16  px-12 ">
-        <SectionTitle title="DISCOVER CHARACTERS" />
+        <div className="pb-5">
+          <SectionTitle title="DISCOVER CHARACTERS" />
+        </div>
         <div className=" max-w-7xl mx-auto flex gap-5 justify-between w-full relative h-full pt-20">
           <div className="w-150 flex flex-col justify-between">
             <SectionDetail
               title="Meet the Trio"
               description="Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod."
-              buttonText="Explore Characters"
+              buttonText="Open Ledger"
             />
             <p className="pb-12 text-hp-gray text-sm">
               "Lorem ipsum dolor sit amet consectetur"
@@ -46,7 +49,7 @@ function App() {
           </div>
           <img
             src="public/images/trio.png"
-            className="z-50 max-h-[500px] justify-self-end self-end"
+            className="z-50 max-h-[580px] justify-self-end self-end"
           />
           <img
             src="public/images/section2bg.png"
@@ -58,8 +61,8 @@ function App() {
 
       {/* Movies Section */}
       <section className="min-h-screen bg-[#000103] py-16 px-12 ">
-        <SectionTitle title="DISCOVER MOVIES" backgroundColor={"bg-hp-dark"} />
-        <div className=" max-w-7xl mx-auto flex gap-5 w-full relative justify-center h-full pt-8">
+        <SectionTitle title="EXPLORE MOVIES" backgroundColor={"bg-hp-dark"} />
+        <div className=" max-w-7xl mx-auto flex gap-5 w-full relative justify-center h-full">
           <div className="flex flex-col justify-between gap-16">
             <SectionDetail
               descriptionAllignment="text-center"
@@ -69,25 +72,50 @@ function App() {
             <div className="flex items-center gap-8 w-full ">
               <HpCard
                 title="Harry Potter and the Philosopher's Stone"
-                imageUrl="https://www.harrypotter.com/images/products/films/rectangle-1.png"
+                imageUrl="https://www.wizardingworld.com/images/products/books/UK/rectangle-1.jpg"
               />
               <HpCard
                 title="Harry Potter and the Chamber of Secrets"
-                imageUrl="https://www.harrypotter.com/images/products/films/rectangle-2.png"
+                imageUrl="https://www.wizardingworld.com/images/products/books/UK/rectangle-2.jpg"
               />
               <HpCard
                 title="Harry Potter and the Prisoner of Azkaban"
-                imageUrl="https://www.harrypotter.com/images/products/films/rectangle-3.png"
+                imageUrl="https://www.wizardingworld.com/images/products/books/UK/rectangle-3.jpg"
               />
               <HpCard
                 title="Harry Potter and the Goblet of Fire"
-                imageUrl="https://www.harrypotter.com/images/products/films/rectangle-4.png"
+                imageUrl="https://www.wizardingworld.com/images/products/books/UK/rectangle-4.jpg"
               />
             </div>
-            <HpButton text="Explore Movies" className={"self-center"} />
+            <HpButton text="Open Ledger" className={"self-center"} />
           </div>
         </div>
       </section>
+      <section className="relative min-h-screen bg-[#000103] pt-16 px-12 overflow-x-hidden">
+        <img
+          src="public/images/bg.png"
+          className="w-full absolute left-0 bottom-0 opacity-30"
+        />
+        <SectionTitle
+          title="MASTER SPELLS & POTIONS"
+          backgroundColor={"bg-hp-dark"}
+        />
+        <div className="max-w-7xl mx-auto flex pt-20">
+          <div className="w-full flex justify-between pt-15">
+            <div className="z-20">
+              <SectionDetail
+                title="Meet the Trio"
+                description="Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod."
+                buttonText="Open Ledger"
+              />
+            </div>
+            <Deck />
+          </div>
+        </div>
+      </section>
+      <footer className="bg-[#202020] items-center gap-2 text-[10px] tracking-widest p-1 flex justify-center">
+        Teriyako <p className="text-[8px]">x</p> Kirarin
+      </footer>
     </main>
   );
 }
