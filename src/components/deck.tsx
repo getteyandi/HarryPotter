@@ -8,72 +8,25 @@ const cards = [
     image:
       "https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg",
     character: "Strength Wizard",
-    house: "Gryffindor",
+    type: "spell",
   },
   {
     image:
       "https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg",
     character: "Tower Sorcerer",
-    house: "Slytherin",
-  },
-  {
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg",
-    character: "Chariot Rider",
-    house: "Ravenclaw",
-  },
-  {
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg",
-    character: "Strength Wizard",
-    house: "Gryffindor",
-  },
-  {
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg",
-    character: "Tower Sorcerer",
-    house: "Slytherin",
-  },
-  {
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg",
-    character: "Harry Potter",
-    house: "Ravenclaw",
-  },
-  {
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg",
-    character: "Strength Wizard",
-    house: "Gryffindor",
-  },
-  {
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg",
-    character: "Tower Sorcerer",
-    house: "Slytherin",
-  },
-  {
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg",
-    character: "Harry Potter",
-    house: "Ravenclaw",
-  },
-  {
-    image: "https://static.wikia.nocookie.net/harrypotter/images/a/a0/Ooze.JPG",
-    character: "Hermione Granger",
-    house: "Gryffindor",
+    type: "spell",
   },
   {
     image:
       "https://static.wikia.nocookie.net/harrypotter/images/8/8b/Beautification_Potion_Bottle.png",
-    character: "Draco Malfoy",
-    house: "Slytherin",
+    character: "Beautification Potion",
+    type: "potion",
   },
   {
     image:
       "https://static.wikia.nocookie.net/harrypotter/images/4/49/BloodReplenishingPotionHM.png",
     character: "Blood-Replenishing Potion",
-    house: "Replenished lost blood",
+    type: "potion",
   },
 ];
 

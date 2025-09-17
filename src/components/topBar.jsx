@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const menuItems = [
-  { name: "Home", href: "/home", bold: true },
-  { name: "Characters", href: "/home" },
-  { name: "Movies", href: "/home" },
-  { name: "Spells", href: "/home" },
-  { name: "Potions", href: "/home" },
+  { name: "Home", href: "/home" },
+  { name: "Characters", href: "/characters" },
+  { name: "Movies", href: "/movies" },
+  { name: "Spells", href: "/spells" },
+  { name: "Potions", href: "/potions" },
 ];
 
 export default function Topbar() {
@@ -18,6 +20,9 @@ export default function Topbar() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   return (
     <div className="fixed z-100 top-0 left-0 w-full text-white">
@@ -33,11 +38,10 @@ export default function Topbar() {
         >
           {menuItems.map((item) => (
             <>
-              <a
-                key={item.name}
-                href={item.href}
+              <Link
+                to={item.href}
                 className={`z-20 relative group flex justify-center transition-[colors,text-shadow] ${
-                  item.bold
+                  item.href === currentPath
                     ? "font-bold text-white  duration-500 text-shadow-yellow"
                     : ""
                 }`}
@@ -45,10 +49,10 @@ export default function Topbar() {
                 <p className="group-hover:text-white transition-colors duration-500">
                   {item.name}
                 </p>
-                {!item.bold && (
+                {item.href !== currentPath && (
                   <span className="min-h-[1px] w-0 opacity-0 group-hover:opacity-100 group-hover:w-full absolute bottom-0 bg-hp-ivory  duration-500" />
                 )}
-              </a>
+              </Link>
               {menuItems.length - 1 !== menuItems.indexOf(item) && (
                 <div
                   className={`h-4 z-20 border-l border-hp-ivory/20 transition-opacity ${
