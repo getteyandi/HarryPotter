@@ -12,7 +12,7 @@ export default function Home() {
     <main className="relative">
       <Topbar />
       {/* Hero Section */}
-      <section className="relative h-screen bg-[url('public/images/hero.png')] bg-cover bg-center px-12">
+      <section className="relative h-screen bg-[url('/public/images/hero.png')] bg-cover bg-center px-12">
         <div className=" max-w-7xl mx-auto flex flex-col items-start justify-center h-full z-40">
           <img src="public/images/text-logo.png" className="w-126" />
           <h1 className="text-5xl font-bold mt-5">HOGWARTS LEDGER</h1>

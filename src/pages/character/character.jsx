@@ -85,29 +85,6 @@ export default function Character() {
   }, []);
   return (
     <main>
-      {/* <div
-        className="relative min-h-screen pt-16 px-12 overflow-x-hidden 
-             bg-hp-royal bg-[url('/images/bg.png')] bg-repeat bg-fixed"
-      >
-        <img
-          src="public/images/bg.png"
-          className="w-full absolute left-0 top-0 h-full opacity-30 "
-        />
-        <div className="flex flex-wrap gap-6 justify-center max-w-7xl mx-auto py-20 text-shadow-sm ">
-          {cards.map((card, idx) => (
-            <FantasyCard
-              key={idx}
-              image={card.image}
-              character={card.character}
-              type="house"
-              houseName={card.house.toLowerCase()}
-            />
-          ))}
-
-          <CharactersSpread cards={cards} />
-        </div>
-      </div> */}
-
       <div className="relative min-h-screen bg-hp-royal pt-16 px-12 overflow-x-hidden">
         <div className="absolute inset-0 bg-[url('/images/bg.png')] bg-repeat bg-auto opacity-30 pointer-events-none"></div>
 
