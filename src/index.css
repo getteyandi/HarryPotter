@@ -22,6 +22,9 @@
   --text-shadow-sectiontitle: 0 4px 4px rgba(0, 0, 0, 0.25);
   --text-inset-shadow-sectiontitle: 2px 2px 0 rgba(21, 16, 5, 1);
 
+  --text-shadow-sectionTitleTwo: 2px 1px 0px #041119;
+  --text-shadow-sectionTitleThree: 1px 2px 0px #e1cba5;
+
   @keyframes widen {
     0% {
       width: 50%;

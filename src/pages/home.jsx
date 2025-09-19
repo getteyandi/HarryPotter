@@ -10,7 +10,6 @@ import Topbar from "../components/topBar";
 export default function Home() {
   return (
     <main className="relative">
-      <Topbar />
       {/* Hero Section */}
       <section className="relative h-screen bg-[url('/public/images/hero.png')] bg-cover bg-center px-12">
         <div className=" max-w-7xl mx-auto flex flex-col items-start justify-center h-full z-40">
@@ -57,13 +56,16 @@ export default function Home() {
 
       {/* Movies Section */}
       <section className="min-h-screen bg-[#000103] py-16 px-12 ">
-        <SectionTitle title="EXPLORE MOVIES" backgroundColor={"bg-hp-dark"} />
+        <SectionTitle
+          title="EXPLORE MOVIES AND BOOKS"
+          backgroundColor={"bg-hp-dark"}
+        />
         <div className=" max-w-7xl mx-auto flex gap-5 w-full relative justify-center h-full">
           <div className="flex flex-col justify-between gap-16">
             <SectionDetail
               descriptionAllignment="text-center"
               descriptionClassName="w-full flex flex-col items-center justify-center"
-              description="Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod."
+              description="Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod."
             />
             <div className="flex items-center gap-8 w-full ">
               <HpCard
@@ -97,8 +99,8 @@ export default function Home() {
           backgroundColor={"bg-hp-dark"}
         />
         <div className="max-w-7xl mx-auto flex pt-20">
-          <div className="w-full flex justify-between pt-15">
-            <div className="z-20">
+          <div className="w-full flex justify-between ">
+            <div className="z-20 w-150">
               <SectionDetail
                 title="Meet the Trio"
                 description="Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod."
