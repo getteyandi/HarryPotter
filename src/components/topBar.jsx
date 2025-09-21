@@ -42,11 +42,15 @@ export default function Topbar() {
                 to={item.href}
                 className={`z-20 relative group flex justify-center transition-[colors,text-shadow] ${
                   item.href === currentPath
-                    ? "font-bold text-white  duration-500 text-shadow-yellow"
+                    ? " text-white duration-500 text-shadow-yellow"
                     : ""
                 }`}
               >
-                <p className="group-hover:text-white transition-colors duration-500">
+                <p
+                  className={`group-hover:text-white transition-colors duration-500 ${
+                    item.href === currentPath ? "font-bold" : "font-normal"
+                  }`}
+                >
                   {item.name}
                 </p>
                 {item.href !== currentPath && (

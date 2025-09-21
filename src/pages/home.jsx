@@ -63,7 +63,7 @@ export default function Home() {
         <div className=" max-w-7xl mx-auto flex gap-5 w-full relative justify-center h-full">
           <div className="flex flex-col justify-between gap-16">
             <SectionDetail
-              descriptionAllignment="text-center"
+              descriptionAllignment="text-center  "
               descriptionClassName="w-full flex flex-col items-center justify-center"
               description="Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod."
             />
@@ -102,6 +102,7 @@ export default function Home() {
           <div className="w-full flex justify-between ">
             <div className="z-20 w-150">
               <SectionDetail
+                descriptionClassName="min-w-150"
                 title="Meet the Trio"
                 description="Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod."
                 buttonText="Open Ledger"
@@ -110,8 +111,9 @@ export default function Home() {
             <Deck />
           </div>
         </div>
+        <div className="absolute w-full h-60 bg-gradient-to-b from-[#000103] to-transparent left-0 top-0 z-10" />
       </section>
-      <footer className="bg-[#202020] items-center gap-2 text-[10px] tracking-widest p-1 flex justify-center">
+      <footer className="bg-[#202020] py-2 items-center gap-2 text-[10px] tracking-widest p-1 flex justify-center">
         Teriyako <p className="text-[8px]">x</p> Kirarin
       </footer>
     </main>

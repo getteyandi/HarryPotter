@@ -2,68 +2,70 @@ import { getCache, setCache } from "./cache";
 
 const API_BASE = "https://api.potterdb.com/v1";
 
+/**
+ * Clean raw characters from PotterDB (removes junk data).
+ */
 function cleanCharacters(characters) {
   return characters.filter((char) => {
     const name = char.attributes.name?.trim() || "";
 
-    // Rule 1: remove single-letter names
-    if (name.length === 1) return false;
+    if (name.length === 1) return false; // single-letter names
+    if (/\d/.test(name)) return false; // names with digits
+    if (name.length > 30) return false; // overly long names
+    if (!char.attributes.image) return false; // must have image
 
-    // Rule 2: remove names containing digits
-    if (/\d/.test(name)) return false;
-
-    // Rule 3: filter out unwanted keywords
     const blacklist = ["spectator", "champion", "student", "actor"];
     if (blacklist.some((word) => name.toLowerCase().includes(word))) {
       return false;
     }
 
-    // Rule 4: exclude names longer than 30 characters
-    if (name.length > 30) return false;
-
-    // Rule 5: exclude without image
-    if (!char.attributes.image) return false;
-
     return true;
   });
 }
 
-export async function getCharacters(page = 1, size = 20) {
-  const cacheKey = `characters-page-${page}-size-${size}`;
+function formatCharacters(characters, fields = ["name", "house", "image"]) {
+  return characters.map((char) => {
+    const attrs = char.attributes;
+    const formatted = {};
+    fields.forEach((field) => {
+      formatted[field] = attrs[field] || null;
+    });
+
+    return {
+      id: char.id,
+      ...formatted,
+    };
+  });
+}
+
+/**
+ * Fetch ONE page of characters (cleaned + formatted).
+ * Always respects PotterDB’s pagination (no cross-page fill).
+ */
+export async function getCharacters(page = 1, size = 20, fields) {
+  const cacheKey = `characters-page-${page}-size-${size}-fields-${fields?.join(
+    ","
+  )}`;
   const cached = getCache(cacheKey);
   if (cached) return cached;
 
-  let results = [];
-  let currentPage = page;
+  const response = await fetch(
+    `${API_BASE}/characters?page[number]=${page}&page[size]=${size}`
+  );
+  if (!response.ok) throw new Error("Failed to fetch characters");
 
-  while (results.length < size) {
-    const response = await fetch(
-      `${API_BASE}/characters?page[number]=${currentPage}&page[size]=${size}`
-    );
-    if (!response.ok) throw new Error("Failed to fetch characters");
+  const data = await response.json();
 
-    const data = await response.json();
-    const cleaned = cleanCharacters(data.data);
+  const cleaned = cleanCharacters(data.data);
+  const formatted = formatCharacters(cleaned, fields);
 
-    results = [...results, ...cleaned];
-
-    // Safety break in case API runs out of characters
-    if (data.data.length === 0) break;
-
-    currentPage++;
-  }
-
-  // Trim results to exactly `size`
-  results = results.slice(0, size);
-
-  setCache(cacheKey, results);
-  return results;
+  setCache(cacheKey, formatted);
+  return formatted;
 }
 
 export async function getCharacterById(id) {
   const response = await fetch(`${API_BASE}/characters/${id}`);
   if (!response.ok) throw new Error("Failed to fetch character");
-
   const data = await response.json();
   return data.data;
 }

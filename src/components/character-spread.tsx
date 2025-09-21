@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useSprings, animated } from "@react-spring/web";
 import FantasyCard from "./fantasyCard";
 import { useNavigate } from "react-router-dom";
 
-// Accepts cards dynamically (e.g. from API or parent component)
 export default function CharactersSpread({ cards }: { cards: any[] }) {
+  const prevCount = useRef(0);
+
   const [springs, api] = useSprings(cards.length, (i) => ({
     from: { opacity: 0, y: -50, scale: 0.8, rotateZ: -5 },
     to: { opacity: 1, y: 0, scale: 1, rotateZ: 0 },
@@ -15,13 +16,22 @@ export default function CharactersSpread({ cards }: { cards: any[] }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.start((i) => ({
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      rotateZ: 0,
-      delay: i * 200,
-    }));
+    api.start((i) => {
+      // If card was already rendered before → animate instantly
+      if (i < prevCount.current) {
+        return { opacity: 1, y: 0, scale: 1, rotateZ: 0, delay: 0 };
+      }
+      // For new cards only → stagger animation
+      return {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        rotateZ: 0,
+        delay: (i - prevCount.current) * 200, // stagger only new batch
+      };
+    });
+
+    prevCount.current = cards.length; // update for next render
   }, [api, cards]);
 
   const handleCardClick = (id: string) => {
@@ -29,19 +39,21 @@ export default function CharactersSpread({ cards }: { cards: any[] }) {
   };
 
   return (
-    <>
+    <div className={"grid grid-cols-4 gap-4 "}>
       {springs.map((style, idx) => (
-        <animated.div key={idx} style={style}>
+        <animated.div key={cards[idx].id ?? idx} style={style}>
           <FantasyCard
             image={cards[idx].image}
-            character={cards[idx].character}
-            type={cards[idx].type}
-            houseName={cards[idx].house?.toLowerCase()} // dynamic
+            character={cards[idx].name}
+            species={cards[idx].species}
+            gender={cards[idx].gender}
+            type="character"
+            houseName={cards[idx].house?.toLowerCase()}
             className="cursor-pointer"
             onClick={() => handleCardClick(cards[idx].id)}
           />
         </animated.div>
       ))}
-    </>
+    </div>
   );
 }

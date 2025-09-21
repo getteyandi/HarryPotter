@@ -27,12 +27,13 @@ function App() {
     <main className="relative">
       <Topbar />
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/characters" element={<Character />} />
         <Route path="/movies" element={<div>Movies Page</div>} />
         <Route path="/spells" element={<div>Spells Page</div>} />
         <Route path="/potions" element={<div>Potions Page</div>} />
-        <Route path="/" element={<CharactersSpread cards={cards} />} />
+        {/* <Route path="/" element={<CharactersSpread cards={cards} />} /> */}
         <Route path="/char-info/:id" element={<CharInfo />} />
       </Routes>
     </main>

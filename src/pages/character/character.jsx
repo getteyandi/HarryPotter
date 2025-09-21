@@ -1,32 +1,74 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import CharactersSpread from "../../components/character-spread";
 import { getCharacters } from "../../repository/characters";
 
 export default function Character() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const observerRef = useRef(null);
+  const loadMoreRef = useRef(null);
 
   useEffect(() => {
-    getCharacters(1, 20) // page 1, 20 results
-      .then((data) => {
-        // Map PotterDB response into your card format
-        const formatted = data.map((char) => ({
-          image:
-            char.attributes.image ||
-            "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg", // fallback
-          character: char.attributes.name,
-          house: char.attributes.house || "Unknown",
-        }));
-        setCards(formatted);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching characters:", err);
-        setLoading(false);
-      });
-  }, []);
+    loadCharacters(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
-  if (loading) return <p>Loading...</p>;
+  async function loadCharacters(pageNum) {
+    try {
+      setLoading(true);
+      const data = await getCharacters(pageNum, 20, [
+        "name",
+        "house",
+        "image",
+        "species",
+        "gender",
+      ]);
+
+      if (data.length === 0) {
+        setHasMore(false);
+      } else {
+        setCards((prev) => {
+          const seen = new Set(prev.map((c) => c.id));
+          const unique = data.filter((c) => !seen.has(c.id));
+          return [...prev, ...unique];
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching characters:", err);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!hasMore || loading) return;
+
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { rootMargin: "200px" } // start loading a bit before hitting bottom
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => observerRef.current?.disconnect();
+  }, [loading, hasMore]);
+
+  if (cards.length === 0 && !loading) {
+    return <p className="text-center text-gray-300">No characters found.</p>;
+  }
 
   return (
     <main>
@@ -36,6 +78,16 @@ export default function Character() {
         <div className="relative z-10 flex flex-wrap gap-6 justify-center max-w-7xl mx-auto py-20 text-shadow-sm">
           <CharactersSpread cards={cards} />
         </div>
+
+        {/* Invisible trigger for infinite scroll */}
+        <div ref={loadMoreRef} className="h-10" />
+
+        {loading && (
+          <p className="text-center text-gray-300 py-6">Loading more...</p>
+        )}
+        {!hasMore && (
+          <p className="text-center text-gray-300 py-6">No more characters.</p>
+        )}
       </div>
     </main>
   );

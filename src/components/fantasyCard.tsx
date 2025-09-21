@@ -1,10 +1,18 @@
+import { PawPrint, VenusAndMars } from "lucide-react";
 import React from "react";
 
 interface FantasyCardProps {
   image: string;
   character?: string;
-  type?: "potion" | "spell" | "house"; // limit to known categories
-  houseName?: "gryffindor" | "slytherin" | "ravenclaw" | "hufflepuff"; // optional if house
+  species?: string;
+  gender?: string;
+  type?: "potion" | "spell" | "house" | "character"; // limit to known categories
+  houseName?:
+    | "gryffindor"
+    | "slytherin"
+    | "ravenclaw"
+    | "hufflepuff"
+    | "unknown"; // optional if house
   className?: string | "";
   onClick?: () => void;
 }
@@ -12,6 +20,8 @@ interface FantasyCardProps {
 const FantasyCard: React.FC<FantasyCardProps> = ({
   image,
   character = "Unknown Wizard",
+  species = "Unknown Species",
+  gender = "Unknown Gender",
   type = "house",
   houseName,
   className,
@@ -53,10 +63,10 @@ const FantasyCard: React.FC<FantasyCardProps> = ({
       );
     }
 
-    if (type === "house" && houseName) {
+    if (type === "character" && houseName !== "unknown") {
       return (
         <img
-          src={`/images/svg/${houseName.toLowerCase()}.svg`}
+          src={`/images/svg/${(houseName ?? "unknown").toLowerCase()}.svg`}
           alt={`${houseName} crest`}
         />
       );
@@ -68,28 +78,33 @@ const FantasyCard: React.FC<FantasyCardProps> = ({
   return (
     <div
       className={
-        `relative group w-64 h-96 flex p-3 items-center rounded-2xl shadow-2xl border-3 border-[#593811] bg-[#35291C] overflow-hidden hover:scale-105 transition-transform duration-300` +
+        `relative group w-64 h-102 flex p-3 items-center rounded-2xl shadow-2xl border-3 border-[#593811] bg-[#35291C] overflow-hidden hover:scale-105 transition-transform duration-300` +
         (className ? ` ${className}` : "")
       }
     >
+      {/* Shine effect */}
+      <div className="absolute z-20 inset-0 pointer-events-none rounded-xl before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/40 before:to-transparent before:-translate-x-full group-hover:before:translate-x-full before:skew-x-12 before:transition-transform before:duration-700"></div>
+
       <div
-        className="relative w-69 h-90 border-3 border-[#DFAA38] rounded-lg bg-[#956838]
+        className="relative w-69 h-94 border-3 border-[#DFAA38] rounded-lg bg-[#956838]
                shadow-[inset_0_2px_6px_rgba(0,0,0,0.2),inset_0_-8px_6px_rgba(0,0,0,0.25)] rounded-tl-xl"
       >
-        <div className="  absolute z-50 -top-1.5 -left-2 ">
-          <div className="bg-hp-royal z-10 relative rounded-full shadow-2xl border-2 border-[#DFAA38] w-14 h-14 px-2.5 pt-1.5">
-            {renderIcon()}
-          </div>
-          <div
-            className="absolute top-3.5 left-0 bg-hp-royal rounded-full shadow-2xl border-2 border-[#DFAA38] 
+        {type === "character" && houseName !== "unknown" && (
+          <div className="  absolute z-50 -top-1.5 -left-2 ">
+            <div className="bg-hp-royal z-10 relative rounded-full shadow-2xl border-2 border-[#DFAA38] w-14 h-14 px-2.5 pt-1.5">
+              {renderIcon()}
+            </div>
+            <div
+              className="absolute top-3.5 left-0 bg-hp-royal rounded-full shadow-2xl border-2 border-[#DFAA38] 
              px-2 overflow-hidden whitespace-nowrap
-             transform -translate-x-10 opacity-0
+             transform -translate-x-5 opacity-0
              group-hover:translate-x-9 group-hover:opacity-100 
              transition-all duration-500 ease-in-out pl-6"
-          >
-            <p>Gryffindor</p>
+            >
+              <p>{houseName}</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Character Image */}
         <img
@@ -100,15 +115,23 @@ const FantasyCard: React.FC<FantasyCardProps> = ({
         />
 
         {/* Card Content */}
-        <div className="p-2 flex flex-col gap-1 h-48 z-40">
-          <h2 className=" text-white leading-5 font-bold drop-shadow-md">
-            {character}
-          </h2>
-          <p className="text-xs shadow-none">Species:</p>
-          <p className="text-xs shadow-none">Gender:</p>
+        <div className="p-2 flex flex-col gap-1 h-48 z-40 font-bold">
+          <h2 className=" text-white leading-5 ">{character}</h2>
+          {type === "character" && (
+            <div className=" flex-col ">
+              <p className="text-xs shadow-none flex items-center gap-1 -mb-1">
+                <PawPrint className="w-4" />
+                {species}
+              </p>
+              <p className="text-xs shadow-none flex items-center gap-1">
+                <VenusAndMars className="w-4" />
+                {gender}
+              </p>
+            </div>
+          )}
         </div>
 
-        <div className="absolute inset-0 bg-[url('/images/overlay.jpg')] z-20 bg-cover bg-center mix-blend-overlay opacity-50 rounded-t-xl"></div>
+        <div className="absolute inset-0 bg-[url('/images/overlay.jpg')] z-20 bg-cover bg-center mix-blend-overlay opacity-20 rounded-t-xl"></div>
       </div>
     </div>
   );

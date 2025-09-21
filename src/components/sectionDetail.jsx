@@ -13,7 +13,7 @@ export default function SectionDetail({
         {title && <h1 className="text-4xl font-bold mt-5">{title}</h1>}
         {description && (
           <p
-            className={` max-w-lg text-sm text-hp-gray mt-5 ${descriptionAllignment}`}
+            className={`max-w-lg text-sm text-hp-gray mt-5 ${descriptionAllignment}`}
           >
             {description}
           </p>
