@@ -1,30 +1,33 @@
 import { useEffect, useState, useRef } from "react";
+import { getPotions } from "../../repository/potions";
 import CharactersSpread from "../../components/character-spread";
-import { getCharacters } from "../../repository/characters";
 
-export default function Character() {
+// Reuse CharactersSpread by mapping:
+// difficulty -> species
+// effect (truncated) -> gender
+export default function PotionsPage() {
   const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
 
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
 
   useEffect(() => {
-    loadCharacters(page);
+    loadPotions(page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  async function loadCharacters(pageNum) {
+  async function loadPotions(pageNum) {
     try {
       setLoading(true);
-      const data = await getCharacters(pageNum, 20, [
+      const data = await getPotions(pageNum, 20, [
         "name",
-        "house",
         "image",
-        "species",
-        "gender",
+        "difficulty",
+        "effect",
+        "ingredients",
       ]);
 
       if (data.length === 0) {
@@ -33,19 +36,32 @@ export default function Character() {
       }
 
       setCards((prev) => {
-        const seen = new Set(prev.map((c) => c.id));
-        const unique = data.filter((c) => !seen.has(c.id));
-        return [...prev, ...unique];
+        const existing = new Set(prev.map((c) => c.id));
+        const mapped = data
+          .filter((p) => !existing.has(p.id))
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            image: p.image,
+            species: p.difficulty || "Unknown Difficulty",
+            gender: p.effect
+              ? p.effect.length > 42
+                ? p.effect.slice(0, 39) + "..."
+                : p.effect
+              : "—",
+            house: "unknown",
+          }));
+        return [...prev, ...mapped];
       });
-    } catch (err) {
-      console.error("Error fetching characters:", err);
+    } catch (e) {
+      console.error("Error fetching potions:", e);
       setHasMore(false);
     } finally {
       setLoading(false);
     }
   }
 
-  // Infinite scroll observer
+  // Infinite scroll
   useEffect(() => {
     if (!hasMore || loading) return;
     if (observerRef.current) observerRef.current.disconnect();
@@ -53,7 +69,7 @@ export default function Character() {
     observerRef.current = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setPage((prev) => prev + 1);
+          setPage((p) => p + 1);
         }
       },
       { rootMargin: "200px" }
@@ -66,7 +82,7 @@ export default function Character() {
   if (cards.length === 0 && !loading) {
     return (
       <main className="pt-24 px-12 text-center text-hp-ivory/70">
-        No characters found.
+        No potions found.
       </main>
     );
   }
@@ -74,24 +90,16 @@ export default function Character() {
   return (
     <main>
       <div className="relative min-h-screen bg-hp-royal pt-20 px-12 overflow-x-hidden">
-        {/* Background pattern (match spells / potions) */}
         <div className="absolute inset-0 bg-[url('/images/bg.png')] bg-repeat bg-auto opacity-25 pointer-events-none" />
-
-        {/* Cards container */}
         <div className="relative z-10 flex flex-wrap gap-6 justify-center max-w-7xl mx-auto py-16">
           <CharactersSpread cards={cards} />
         </div>
-
-        {/* Trigger for infinite scroll */}
         <div ref={loadMoreRef} className="h-10" />
-
         {loading && (
           <p className="text-center text-hp-ivory/60 py-6">Loading more...</p>
         )}
         {!hasMore && (
-          <p className="text-center text-hp-ivory/40 py-6">
-            No more characters.
-          </p>
+          <p className="text-center text-hp-ivory/40 py-6">No more potions.</p>
         )}
       </div>
     </main>

@@ -4,6 +4,11 @@ import Character from "./pages/character/character.jsx";
 import Home from "./pages/home.jsx";
 import CharactersSpread from "./components/character-spread.js";
 import CharInfo from "./pages/character/character-info/char-info.jsx";
+import ForbiddenDraw from "./pages/forbidden-draw/ForbiddenDraw.js";
+import BooksAndMovies from "./pages/books-and-movies/books-and-movies.jsx";
+import Spells from "./pages/spell/spells.jsx";
+import Potions from "./pages/potion/potions.jsx";
+import SpellShuffle from "./pages/spell-shuffle/spellShuffle.jsx";
 
 const cards = [
   {
@@ -30,11 +35,16 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/characters" element={<Character />} />
-        <Route path="/movies" element={<div>Movies Page</div>} />
-        <Route path="/spells" element={<div>Spells Page</div>} />
-        <Route path="/potions" element={<div>Potions Page</div>} />
+        <Route path="/books-and-movies" element={<BooksAndMovies />} />
+        <Route path="/spells" element={<Spells />} />
+        <Route path="/potions" element={<Potions />} />
+        {/* <Route path="/movies" element={<div>Movies Page</div>} /> */}
+        {/* <Route path="/spells" element={<div>Spells Page</div>} /> */}
+        {/* <Route path="/potions" element={<div>Potions Page</div>} /> */}
         {/* <Route path="/" element={<CharactersSpread cards={cards} />} /> */}
         <Route path="/char-info/:id" element={<CharInfo />} />
+        <Route path="/forbidden-draw" element={<ForbiddenDraw />} />
+        <Route path="/spell-shuffle" element={<SpellShuffle />} />
       </Routes>
     </main>
   );

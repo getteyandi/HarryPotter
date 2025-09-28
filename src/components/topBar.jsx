@@ -5,9 +5,9 @@ import { useLocation } from "react-router-dom";
 const menuItems = [
   { name: "Home", href: "/home" },
   { name: "Characters", href: "/characters" },
-  { name: "Movies", href: "/movies" },
   { name: "Spells", href: "/spells" },
   { name: "Potions", href: "/potions" },
+  { name: "Books & Movies", href: "/books-and-movies" },
 ];
 
 export default function Topbar() {
