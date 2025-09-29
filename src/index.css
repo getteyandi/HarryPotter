@@ -35,6 +35,141 @@
   }
 
   --animate-widen: widen 0.3s ease-in-out forwards;
+
+  /* 🔥 New glow keyframes */
+  @keyframes glow {
+    0%,
+    100% {
+      box-shadow: 0 0 5px 1px rgba(255, 223, 128, 0);
+    }
+    50% {
+      box-shadow: 0 0 10px 4px rgba(255, 223, 128, 0.25);
+    }
+  }
+
+  /* 🔥 Expose it like other animations */
+  --animate-glow: glow 1.5s ease-in-out infinite;
+
+  @keyframes ring-pop {
+    0% {
+      transform: translate(-50%, -50%) scale(0.7);
+      opacity: 0.6;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.8);
+      opacity: 0;
+    }
+  }
+  @keyframes shine-sweep {
+    0% {
+      transform: translateX(-120%) skewX(-12deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translateX(120%) skewX(-12deg);
+      opacity: 0;
+    }
+  }
+  @keyframes fail-crack-a {
+    0% {
+      transform: translate(-50%, -50%) rotate(45deg) scaleX(0);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(45deg) scaleX(1);
+      opacity: 0;
+    }
+  }
+  @keyframes fail-crack-b {
+    0% {
+      transform: translate(-50%, -50%) rotate(-45deg) scaleX(0);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(-45deg) scaleX(1);
+      opacity: 0;
+    }
+  }
+}
+
+/* Status chip FX (no remount; CSS-only) */
+.status-chip {
+  position: relative;
+  overflow: visible;
+}
+.status-chip .fx {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Success rings */
+.status-chip .fx-ring {
+  left: 50%;
+  top: 50%;
+  border-radius: 9999px;
+  border-width: 2px;
+}
+.status-chip .fx-ring.success-sm {
+  width: 160px;
+  height: 160px;
+  border-color: rgba(16, 185, 129, 0.7); /* emerald-300/70 */
+  animation: ring-pop 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.status-chip .fx-ring.success-lg {
+  width: 220px;
+  height: 220px;
+  border-color: rgba(16, 185, 129, 0.5); /* emerald-300/50 */
+  animation: ring-pop 800ms cubic-bezier(0.22, 1, 0.36, 1) 90ms forwards;
+}
+
+/* Shine */
+.status-chip .fx-shine {
+  left: 0;
+  right: auto;
+  top: -16px;
+  bottom: -16px;
+  width: 35%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transform: skewX(-12deg);
+  filter: blur(1px);
+  animation: shine-sweep 650ms ease-out forwards;
+}
+
+/* Fail ring + cracks */
+.status-chip .fx-ring.fail {
+  width: 180px;
+  height: 180px;
+  border-color: rgba(244, 63, 94, 0.7); /* rose-300/70 */
+  animation: ring-pop 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.status-chip .fx-crack {
+  left: 50%;
+  top: 50%;
+  height: 2px;
+  width: 14rem;
+  transform-origin: left;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+  background: rgba(244, 63, 94, 0.8);
+}
+.status-chip .fx-crack.a {
+  animation: fail-crack-a 500ms ease-out forwards;
+}
+.status-chip .fx-crack.b {
+  animation: fail-crack-b 500ms 80ms ease-out forwards;
 }
 
 :root {

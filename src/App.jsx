@@ -9,6 +9,7 @@ import BooksAndMovies from "./pages/books-and-movies/books-and-movies.jsx";
 import Spells from "./pages/spell/spells.jsx";
 import Potions from "./pages/potion/potions.jsx";
 import SpellShuffle from "./pages/spell-shuffle/spellShuffle.jsx";
+import { useLocation } from "react-router-dom";
 
 const cards = [
   {
@@ -28,9 +29,13 @@ const cards = [
 ];
 
 function App() {
+  const location = useLocation();
+  const hideTopbar = location.pathname === "/spell-shuffle";
+
   return (
     <main className="relative">
-      <Topbar />
+      {!hideTopbar && <Topbar />}
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
