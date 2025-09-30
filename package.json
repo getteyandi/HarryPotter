@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.2.6",
+    "@lottiefiles/dotlottie-react": "^0.17.2",
     "@react-spring/web": "^10.0.2",
     "@tailwindcss/vite": "^4.1.13",
     "framer-motion": "^12.23.22",

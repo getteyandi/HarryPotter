@@ -172,6 +172,26 @@
   animation: fail-crack-b 500ms 80ms ease-out forwards;
 }
 
+/* Card shine sweep (reuses @keyframes shine-sweep) */
+.card-shine {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 0; /* start at left, animate across */
+  width: 80%; /* thickness of the sweep */
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.28),
+    transparent
+  );
+  transform: translateX(-120%) skewX(-12deg);
+  filter: blur(1px);
+  pointer-events: none;
+  animation: shine-sweep 1200ms ease-out infinite;
+  border-radius: 12px;
+}
+
 :root {
   /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
   font-family: "Cinzel", serif;

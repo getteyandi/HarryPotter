@@ -11,10 +11,28 @@ class AudioManager {
     this._id = 0;
     this._unlocked = false;
     this._pending = [];
+    this._unlockListeners = new Set(); // NEW
   }
 
   get isReady() {
     return !!this.ctx;
+  }
+
+  get unlocked() {
+    // NEW
+    return !!this._unlocked;
+  }
+
+  onUnlock(fn) {
+    // NEW: subscribe to unlock
+    if (this._unlocked) {
+      try {
+        fn();
+      } catch {}
+      return () => {};
+    }
+    this._unlockListeners.add(fn);
+    return () => this._unlockListeners.delete(fn);
   }
 
   whenUnlocked(fn) {
@@ -63,15 +81,24 @@ class AudioManager {
     cat.gain.gain.value = cat.volume;
   }
 
-  async load(manifest) {
-    // manifest: { key: { url, category?: 'sfx'|'music'|'ui', volume?: 0..1 } }
+  async load(manifest, opts = {}) {
     this.ensureCtx();
     const entries = Object.entries(manifest);
+    let done = 0;
+    const total = entries.length;
+    const onProgress = opts.onProgress;
+
     await Promise.all(
-      entries.map(async ([key, { url, category = "sfx", volume = 1 }]) => {
-        this.meta.set(key, { url, category, volume });
-        const buf = await this._fetchBuffer(url);
+      entries.map(async ([key, def]) => {
+        this.meta.set(key, { ...def });
+        const buf = await this._fetchBuffer(def.url);
         this.buffers.set(key, buf);
+        done++;
+        if (typeof onProgress === "function") {
+          try {
+            onProgress(done, total, key);
+          } catch {}
+        }
       })
     );
   }
@@ -218,9 +245,15 @@ class AudioManager {
       fadeInMs: fadeMs,
       oneAtATime: true,
     });
+    if (!next) {
+      if (prev) prev.stop(fadeMs);
+      this.music.current = null;
+      return null;
+    }
     if (prev) prev.stop(fadeMs);
     this.music.current = next;
     this.music.current.key = nextKey;
+    return next;
   }
 
   duck(categoryNames = ["music"], to = 0.3, fadeMs = 200) {
@@ -261,7 +294,7 @@ class AudioManager {
         try {
           onUnlock();
         } catch {}
-      // flush any pending immediately
+      // flush queued
       const pending = this._pending.splice(0);
       pending.forEach((f) => {
         try {
@@ -280,6 +313,14 @@ class AudioManager {
           try {
             onUnlock();
           } catch {}
+        // notify listeners
+        Array.from(this._unlockListeners).forEach((f) => {
+          try {
+            f();
+          } catch {}
+        });
+        this._unlockListeners.clear();
+        // flush queued
         const pending = this._pending.splice(0);
         pending.forEach((f) => {
           try {
@@ -297,7 +338,38 @@ class AudioManager {
   }
 
   has(key) {
-    return this.buffers.has(key); // NEW: quick guard for preloaded sounds
+    return this.buffers?.has?.(key) === true;
+  }
+
+  // Unlock immediately (call inside a user gesture handler)
+  async unlockNow() {
+    this.ensureCtx();
+    try {
+      if (this.ctx.state === "suspended") {
+        await this.ctx.resume();
+      }
+    } catch {}
+    if (!this._unlocked) {
+      this._unlocked = true;
+      // notify listeners
+      if (this._unlockListeners) {
+        Array.from(this._unlockListeners).forEach((fn) => {
+          try {
+            fn();
+          } catch {}
+        });
+        this._unlockListeners.clear();
+      }
+      // flush queued
+      if (this._pending) {
+        const pending = this._pending.splice(0);
+        pending.forEach((f) => {
+          try {
+            f();
+          } catch {}
+        });
+      }
+    }
   }
 }
 

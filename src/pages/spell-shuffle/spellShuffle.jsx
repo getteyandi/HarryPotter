@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import HpButton from "../../components/hp-button";
 import { Link, useLocation } from "react-router-dom";
@@ -8,31 +8,50 @@ import {
   ArrowUp,
   ChevronDown,
   ChevronUp,
+  Play,
   Volume,
   Volume1,
   Volume2,
   VolumeX,
+  Wand2,
 } from "lucide-react";
 import audio from "../../lib/audio-manager";
+import useAssetPreloader from "../hooks/useAssetPreloader";
 
 const PLACEHOLDER = "/images/hero.png";
 
 // 14 spell cards (names + image paths; replace images if you have them)
 const BASE_CARDS = [
-  { id: "expelliarmus", name: "Expelliarmus", img: PLACEHOLDER },
-  { id: "lumos", name: "Lumos", img: PLACEHOLDER },
-  { id: "alohomora", name: "Alohomora", img: PLACEHOLDER },
-  { id: "accio", name: "Accio", img: PLACEHOLDER },
-  { id: "stupefy", name: "Stupefy", img: PLACEHOLDER },
-  { id: "protego", name: "Protego", img: PLACEHOLDER },
-  { id: "petrificus-totalus", name: "Petrificus Totalus", img: PLACEHOLDER },
-  { id: "wingardium-leviosa", name: "Wingardium Leviosa", img: PLACEHOLDER },
-  { id: "rictusempra", name: "Rictusempra", img: PLACEHOLDER },
-  { id: "expecto-patronum", name: "Expecto Patronum", img: PLACEHOLDER },
-  { id: "obliviate", name: "Obliviate", img: PLACEHOLDER },
-  { id: "reducto", name: "Reducto", img: PLACEHOLDER },
-  { id: "sectumsempra", name: "Sectumsempra", img: PLACEHOLDER },
-  { id: "confundo", name: "Confundo", img: PLACEHOLDER },
+  {
+    id: "expelliarmus",
+    name: "Expelliarmus",
+    img: "/images/cards/expelliarmus.png",
+  },
+  { id: "lumos", name: "Lumos", img: "/images/cards/lumos.png" },
+  {
+    id: "transformation",
+    name: "Transformation",
+    img: "/images/cards/transformation.png",
+  },
+  { id: "accio", name: "Accio", img: "/images/cards/accio.png" },
+  { id: "evanesco", name: "Evanesco", img: "/images/cards/evanesco.png" },
+  { id: "crucio", name: "Crucio", img: "/images/cards/crucio.png" },
+  { id: "incendio", name: "Incendio", img: "/images/cards/incendio.png" },
+  { id: "reparo", name: "Reparo", img: "/images/cards/reparo.png" },
+  { id: "levioso", name: "Levioso", img: "/images/cards/levioso.png" },
+  { id: "flipendo", name: "Flipendo", img: "/images/cards/flipendo.png" },
+  {
+    id: "altering-spell",
+    name: "Altering Spell",
+    img: "/images/cards/altering-spell.png",
+  },
+  {
+    id: "avada-kedavra",
+    name: "Avada Kedavra",
+    img: "/images/cards/avada-kedavra.png",
+  },
+  { id: "bombarda", name: "Bombarda", img: "/images/cards/bombarda.png" },
+  { id: "confundo", name: "Confundo", img: "/images/cards/confundo.png" },
 ];
 
 // Power-up catalog
@@ -176,6 +195,15 @@ const RNG_WEIGHTS = [
   { tier: "legendary", w: 5 },
   { tier: "epic", w: 25 },
   { tier: "normal", w: 70 },
+];
+
+// NEW: rotating tips for the loader
+const LOADING_TIPS = [
+  "Tip: Follow the rhythm — shuffles have a cadence.",
+  "Tip: Keep your eyes near the target’s lane.",
+  "Tip: Faster speeds reward more points.",
+  "Tip: Boons apply from the next round onward.",
+  "Tip: The target appears more often with Trace Lock.",
 ];
 
 function rollTier() {
@@ -354,7 +382,29 @@ export default function SpellShuffle() {
   const [musicVolume, setMusicVolume] = useState(0.6);
   const [musicMuted, setMusicMuted] = useState(false);
   const [musicPopoverOpen, setMusicPopoverOpen] = useState(false);
+  const [audioUnlocked, setAudioUnlocked] = useState(audio.unlocked || false); // NEW
   const musicPopoverCloseTimer = useRef(null);
+  const MIN_LOADER_MS = 1200;
+  const [minLoaderDone, setMinLoaderDone] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMinLoaderDone(true), MIN_LOADER_MS);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Safe guards for audio (require preloaded buffers)
+  const canPlay = (key) =>
+    assetsReady &&
+    audioUnlocked &&
+    (typeof audio.has !== "function" || audio.has(key));
+  const playSafe = (key, opts) => {
+    if (canPlay(key)) audio.play(key, opts);
+  };
+  const playMusicSafe = (key, opts) => {
+    if (canPlay(key)) audio.playMusic(key, opts);
+  };
+  const crossfadeMusicSafe = (key, opts) => {
+    if (canPlay(key)) audio.crossfadeMusic(key, opts);
+  };
 
   const openMusicPopover = () => {
     if (musicPopoverCloseTimer.current) {
@@ -396,121 +446,155 @@ export default function SpellShuffle() {
     : 0;
   const lastSpeedLabelSfxRef = useRef(speedLabel);
 
+  // Build asset lists
+  const audioManifest = useMemo(
+    () => ({
+      ost_title: { url: "/sounds/ost_title.mp3", category: "music", volume: 1 },
+      ost_game: { url: "/sounds/ost_game.mp3", category: "music", volume: 1 },
+      curtain_in: {
+        url: "/sounds/curtain_in.mp3",
+        category: "sfx",
+        volume: 0.9,
+      },
+      curtain_out: {
+        url: "/sounds/curtain_out.mp3",
+        category: "sfx",
+        volume: 0.5,
+      },
+      status_changed: {
+        url: "/sounds/status_changed.mp3",
+        category: "sfx",
+        volume: 0.5,
+      },
+      card_flip: { url: "/sounds/card_flip.mp3", category: "sfx", volume: 1 },
+      card_shuffle: {
+        url: "/sounds/card_shuffle.mp3",
+        category: "sfx",
+        volume: 1,
+      },
+      card_placed: {
+        url: "/sounds/card_placed.mp3",
+        category: "sfx",
+        volume: 1,
+      },
+      card_hover: {
+        url: "/sounds/card_hover.mp3",
+        category: "ui",
+        volume: 0.5,
+      },
+      speed_changed: {
+        url: "/sounds/speed_changed.mp3",
+        category: "sfx",
+        volume: 0.5,
+      },
+      correct_guess: {
+        url: "/sounds/correct_guess.mp3",
+        category: "sfx",
+        volume: 0.7,
+      },
+      wrong_guess: {
+        url: "/sounds/wrong_guess.mp3",
+        category: "sfx",
+        volume: 0.7,
+      },
+      button_click: {
+        url: "/sounds/button_click.mp3",
+        category: "ui",
+        volume: 0.5,
+      },
+      general_hover: {
+        url: "/sounds/general_hover.mp3",
+        category: "ui",
+        volume: 0.5,
+      },
+      general_click: {
+        url: "/sounds/general_click.mp3",
+        category: "ui",
+        volume: 1,
+      },
+      boon_picked: {
+        url: "/sounds/boon_picked.mp3",
+        category: "sfx",
+        volume: 0.5,
+      },
+      boon_draft_opened: {
+        url: "/sounds/boon_draft_opened.mp3",
+        category: "sfx",
+        volume: 0.8,
+      },
+      card_highlighted: {
+        url: "/sounds/card_highlighted.mp3",
+        category: "ui",
+        volume: 0.3,
+      },
+    }),
+    []
+  );
+
+  const imageAssets = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          "/images/bg.png",
+          "/images/hero.png",
+          "/images/cards/back.png",
+          ...BASE_CARDS.map((c) => c.img),
+        ])
+      ),
+    []
+  );
+
+  const {
+    ready: assetsReady,
+    progress,
+    total,
+  } = useAssetPreloader({
+    audioManifest,
+    imageUrls: imageAssets,
+  });
+  const loadingTip = LOADING_TIPS[(progress || 0) % LOADING_TIPS.length];
+  const showLoading = !assetsReady || !minLoaderDone || !audioUnlocked; // CHANGED: keep loader until unlock
+
+  // Initialize audio context, watch unlock
   useEffect(() => {
-    audio.attachUnlock(document);
-    audio.setCategoryVolume("music", 0.6);
+    const off = audio.onUnlock(() => setAudioUnlocked(true));
+    audio.setCategoryVolume("music", musicMuted ? 0 : musicVolume);
     audio.setCategoryVolume("sfx", 0.9);
     audio.setCategoryVolume("ui", 0.8);
-
-    audio
-      .load({
-        ost_title: {
-          url: "/sounds/ost_title.mp3",
-          category: "music",
-          volume: 1,
-        },
-        ost_game: {
-          url: "/sounds/ost_game.mp3",
-          category: "music",
-          volume: 1,
-        },
-        curtain_in: {
-          url: "/sounds/curtain_in.mp3",
-          category: "sfx",
-          volume: 0.9,
-        },
-        curtain_out: {
-          url: "/sounds/curtain_out.mp3",
-          category: "sfx",
-          volume: 0.5,
-        },
-        status_changed: {
-          url: "/sounds/status_changed.mp3",
-          category: "sfx",
-          volume: 0.5,
-        },
-        card_flip: {
-          url: "/sounds/card_flip.mp3",
-          category: "sfx",
-          volume: 1,
-        },
-        card_shuffle: {
-          url: "/sounds/card_shuffle.mp3",
-          category: "sfx",
-          volume: 1,
-        },
-        card_placed: {
-          url: "/sounds/card_placed.mp3",
-          category: "sfx",
-          volume: 1,
-        },
-        card_hover: {
-          url: "/sounds/card_hover.mp3",
-          category: "ui",
-          volume: 0.5,
-        },
-        speed_changed: {
-          url: "/sounds/speed_changed.mp3",
-          category: "sfx",
-          volume: 0.5,
-        },
-        correct_guess: {
-          url: "/sounds/correct_guess.mp3",
-          category: "sfx",
-          volume: 0.7,
-        },
-        wrong_guess: {
-          url: "/sounds/wrong_guess.mp3",
-          category: "sfx",
-          volume: 0.7,
-        },
-        button_click: {
-          url: "/sounds/button_click.mp3",
-          category: "ui",
-          volume: 0.5,
-        },
-        general_hover: {
-          url: "/sounds/general_hover.mp3",
-          category: "ui",
-          volume: 0.5,
-        },
-        general_click: {
-          url: "/sounds/general_click.mp3",
-          category: "ui",
-          volume: 1,
-        },
-      })
-      .then(() => {});
-  }, []);
-
-  // Keep audio category volume in sync with UI
-  useEffect(() => {
-    audio.setCategoryVolume("music", musicMuted ? 0 : musicVolume);
+    return () => off && off();
   }, [musicMuted, musicVolume]);
 
-  // Start/stop OST based on route
+  // Start/stop OST based on route + readiness + unlock (do not switch on volume changes)
   useEffect(() => {
     audio.whenUnlocked(() => {
-      if (isSpellShuffle) {
-        // ensure game OST is playing when on this page
-        if (audio.music.current?.key !== "ost_title") {
-          audio.playMusic("ost_title", {
-            fadeMs: 200,
-            loop: true,
-            volume: 0.6,
-          });
-        }
-      } else {
-        // leaving this page: stop our OST
+      if (!isSpellShuffle || !assetsReady || !audioUnlocked) {
         if (
           audio.music.current &&
           ["ost_game", "ost_title"].includes(audio.music.current.key)
         ) {
           audio.music.current.stop(250);
         }
+        return;
+      }
+
+      // Only start if nothing is playing yet; choose by phase.
+      if (!audio.music.current) {
+        const initialKey = phase === "init" ? "ost_title" : "ost_game";
+        if (canPlay(initialKey)) {
+          audio.playMusic(initialKey, {
+            fadeMs: 250,
+            loop: true,
+            volume: musicMuted ? 0 : musicVolume,
+          });
+        }
       }
     });
-  }, [isSpellShuffle]);
+  }, [isSpellShuffle, assetsReady, audioUnlocked, phase]); // NOTE: removed musicMuted/musicVolume deps
+
+  // Keep audio category volume in sync with UI
+  useEffect(() => {
+    audio.setCategoryVolume("music", musicMuted ? 0 : musicVolume);
+  }, [musicMuted, musicVolume]);
 
   // Also stop OST on unmount (safety)
   useEffect(() => {
@@ -558,47 +642,21 @@ export default function SpellShuffle() {
     const prev = lastPhaseRef.current;
     lastPhaseRef.current = phase;
 
-    // Chime for status text changes (skip init and phases with their own SFX)
-    // Status Changed
+    // Status chime (only after assets are ready)
     if (STATUS_CHIME_PHASES.has(phase)) {
-      audio.play("status_changed", {
-        category: "sfx",
-        oneAtATime: true,
-      });
+      playSafe("status_changed", { category: "sfx", oneAtATime: true });
     }
 
     switch (phase) {
       case "init":
-        // Back on hero: ensure Title OST
-        if (isSpellShuffle && audio.music.current?.key !== "ost_title") {
-          audio.crossfadeMusic("ost_title", { fadeMs: 600, loop: true });
+        if (isSpellShuffle) {
+          crossfadeMusicSafe("ost_title", { fadeMs: 600, loop: true });
         }
         break;
-
       case "enter":
-        // From hero into game: switch to Game OST
         if (prev === "init" && isSpellShuffle) {
-          audio.crossfadeMusic("ost_game", { fadeMs: 800, loop: true });
+          crossfadeMusicSafe("ost_game", { fadeMs: 800, loop: true });
         }
-        break;
-      case "cover":
-        // audio.play("flip_all", { oneAtATime: true });
-        break;
-      case "shuffling":
-        // // start-of-shuffle cue (optional)
-        // audio.play("shuffle", { volume: 0.6, oneAtATime: true });
-        break;
-      case "result":
-        // audio.duck(["music"], 0.4, 120);
-        // audio
-        //   .play("success", { oneAtATime: true })
-        //   .onEnded(() => audio.unduck(["music"], null, 160));
-        break;
-      case "gameover":
-        // audio.duck(["music"], 0.3, 120);
-        // audio
-        //   .play("fail", { oneAtATime: true })
-        //   .onEnded(() => audio.unduck(["music"], null, 200));
         break;
       default:
         break;
@@ -895,6 +953,7 @@ export default function SpellShuffle() {
         }, 250);
       }, enterDelayMs);
     } else if (phase === "showTarget") {
+      audio.play("card_highlighted", { category: "ui", oneAtATime: true });
       // After minimum reveal, pause in 'ready' until user begins shuffling
       timerRef.current = setTimeout(
         () => setPhase("ready"),
@@ -986,6 +1045,7 @@ export default function SpellShuffle() {
     // 3 random picks, avoid duplicates already owned
     const ownedIds = inventory.map((p) => p.id);
     const picks = drawDraftPicks(3, ownedIds);
+    audio.play("boon_draft_opened", { category: "sfx" });
     setDraftPicks(picks);
     setReplacingIndex(null);
     setPhase("draft"); // NEW phase
@@ -1141,9 +1201,128 @@ export default function SpellShuffle() {
     return () => window.removeEventListener("keydown", onKey);
   }, [phase]);
 
+  // 1) Enhanced assets loading screen (now also hosts Start button)
+  if (showLoading) {
+    const pct = total ? Math.round((progress / total) * 100) : 0;
+    const displayPct = assetsReady ? 100 : pct;
+    const canShowStart = assetsReady && minLoaderDone && !audioUnlocked;
+
+    return (
+      <main>
+        <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#0e0b24] via-hp-royal to-[#0e0b24]">
+          {/* Starfield (restored) */}
+          <div className="pointer-events-none absolute inset-0 opacity-30">
+            {[...Array(20)].map((_, i) => (
+              <motion.span
+                key={`star-${i}`}
+                className="absolute w-[2px] h-[2px] rounded-full bg-amber-200/80"
+                style={{
+                  left: `${(i * 173) % 100}%`,
+                  top: `${(i * 97) % 100}%`,
+                  filter: "drop-shadow(0 0 6px rgba(255,214,127,0.6))",
+                }}
+                initial={{ opacity: 0.1, scale: 0.7 }}
+                animate={{ opacity: [0.1, 0.9, 0.1], scale: [0.7, 1, 0.7] }}
+                transition={{
+                  duration: 2.2 + (i % 6) * 0.25,
+                  repeat: Infinity,
+                  delay: i * 0.08,
+                  ease: "easeInOut",
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Vignette glow (restored) */}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_55%_at_50%_50%,rgba(255,214,127,0.14),transparent_60%)]" />
+
+          <motion.div
+            className="relative z-10 w-full max-w-md mx-auto rounded-2xl border border-amber-200/20 bg-black/35 backdrop-blur-md p-6 text-hp-ivory shadow-[0_10px_40px_rgba(0,0,0,0.35)]"
+            initial={{ y: 10, opacity: 0, scale: 0.98 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
+            {/* Crest (restored) */}
+            <div className="flex items-center justify-center mb-4">
+              <motion.div
+                className="relative w-20 h-20 rounded-full bg-amber-200/10 border border-amber-200/30 grid place-items-center"
+                animate={{ rotate: [0, 7, 0, -7, 0] }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <Wand2 className="w-8 h-8 text-amber-200" />
+                <span className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_30px_rgba(255,214,127,0.25)_inset]" />
+              </motion.div>
+            </div>
+
+            <h2 className="text-2xl font-extrabold text-center">
+              Loading Spell Shuffle
+            </h2>
+
+            <p className="text-sm opacity-80 text-center mt-1 mb-4">
+              {canShowStart ? "Click to enter the game" : "Preparing assets…"}
+              {!canShowStart && <span className="ml-1">{displayPct}%</span>}
+            </p>
+
+            <div className="relative h-3 w-full rounded-full bg-black/40 overflow-hidden border border-amber-200/20">
+              <motion.div
+                className="relative h-full rounded-full bg-gradient-to-r from-amber-300 via-amber-200 to-amber-300"
+                initial={{ width: 0 }}
+                animate={{ width: `${displayPct}%` }}
+                transition={{ type: "spring", stiffness: 160, damping: 24 }}
+              >
+                <motion.span
+                  className="absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                  animate={{ x: ["-20%", "120%"] }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+              </motion.div>
+            </div>
+
+            <div className="mt-4 text-xs opacity-80 text-center">
+              {loadingTip}
+            </div>
+
+            {/* Start button (unchanged) */}
+            {canShowStart && (
+              <motion.button
+                type="button"
+                className="cursor-pointer mt-5 w-full inline-flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-amber-300/20 border border-amber-200/40 text-amber-50 hover:brightness-110 shadow-lg"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={async () => {
+                  await audio.unlockNow();
+                  setAudioUnlocked(true);
+                }}
+                onKeyDown={async (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    await audio.unlockNow();
+                    setAudioUnlocked(true);
+                  }
+                }}
+                title="Enable audio"
+              >
+                <Play className="w-5 h-5" />
+                <span className="font-semibold">Enter Game</span>
+              </motion.button>
+            )}
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main>
-      <div className="relative min-h-screen flex items-center flex-col justify-center bg-hp-royal pt-30 pb-32 px-6 md:px-12 overflow-x-hidden">
+      <div className="relative min-h-screen flex items-center flex-col justify-center bg-hp-royal px-6 md:px-12 overflow-x-hidden">
         <div className="absolute inset-0 bg-[url('/images/bg.png')] bg-repeat bg-auto opacity-20 pointer-events-none" />
 
         {/* INIT: Hero title screen */}
@@ -1151,7 +1330,7 @@ export default function SpellShuffle() {
           {phase === "init" && !heroOut && (
             <motion.section
               key="hero"
-              className="relative z-10 max-w-5xl mx-auto py-16 md:py-20 text-center text-hp-ivory"
+              className="relative z-10 max-w-5xl mx-auto text-center text-hp-ivory"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(2px)" }}
@@ -1851,7 +2030,7 @@ export default function SpellShuffle() {
                       handleGuess(c.id);
                     }}
                     disabled={!isClickable}
-                    className={`relative block text-left   active:scale-95  focus:outline-none transition-[scale,filter] ${
+                    className={`relative block text-left active:scale-95 focus:outline-none transition-[scale,filter] ${
                       phase === "guess"
                         ? "hover:brightness-120 hover:scale-[1.05] cursor-pointer"
                         : ""
@@ -1861,7 +2040,7 @@ export default function SpellShuffle() {
                   >
                     {/* Tossing wrapper (size + perspective) */}
                     <motion.div
-                      className="relative mx-auto w-[140px] sm:w-[160px] md:w-[180px] aspect-[3/4] rounded-xl"
+                      className="relative mx-auto w-[180px] aspect-[3/4] rounded-xl"
                       style={{ perspective: 1200, willChange: "transform" }}
                       animate={
                         tossingId === c.id
@@ -1897,7 +2076,7 @@ export default function SpellShuffle() {
                         className={[
                           "pointer-events-none absolute inset-0 rounded-xl animate-all",
                           highlighting
-                            ? "ring-2 ring-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.2)]"
+                            ? "ring-2 ring-hp-ivory "
                             : "ring-0 ring-hp-ivory/20",
                         ].join(" ")}
                       />
@@ -1929,42 +2108,45 @@ export default function SpellShuffle() {
                             <img
                               src={c.img}
                               alt={c.name}
-                              className="w-full h-full object-cover select-none"
+                              className="w-full border rounded-xl border-hp-ivory/50 h-full object-cover select-none"
                               draggable={false}
                               loading="lazy"
                             />
-                            {phase !== "guess" &&
-                              phase !== "shuffling" &&
-                              showFront && (
-                                <span className="absolute left-1/2 -translate-x-1/2 bottom-2 text-[10px] px-2 py-1 rounded-full bg-black/60 text-white">
-                                  {c.name}
-                                </span>
-                              )}
+
+                            {/* Target badge */}
                             {isTarget &&
                               (phase === "showTarget" ||
                                 phase === "result" ||
                                 phase === "ready" ||
                                 phase === "gameover") && (
-                                <span className="absolute top-2 right-2 text-[10px] px-2 py-1 rounded-full bg-emerald-600 text-white">
+                                <span className="absolute top-2 right-2 text-[10px] px-2 py-1 rounded-full bg-hp-royal border-hp-ivory border text-white">
                                   Target
                                 </span>
                               )}
+
+                            {/* Shine sweep while highlighted */}
+                            {highlighting && <span className="card-shine" />}
                           </div>
 
                           {/* Back face (solid) */}
                           <div
-                            className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_30%_20%,rgba(225,203,165,0.12),transparent_40%),radial-gradient(circle_at_70%_80%,rgba(225,203,165,0.08),transparent_40%)] bg-hp-royal rounded-xl"
+                            className="absolute  inset-0 grid place-items-center rounded-xl overflow-hidden"
                             style={{
                               transform: "rotateY(180deg)",
                               backfaceVisibility: "hidden",
                               WebkitBackfaceVisibility: "hidden",
                             }}
                           >
-                            {/* Move border to viewport wrapper; keep an inner subtle one if desired */}
+                            {/* Use back.png instead of gradient + ? */}
+                            <img
+                              src="/images/cards/back.png"
+                              alt="Card back"
+                              className="w-full h-full object-cover border rounded-xl border-hp-ivory/50 select-none"
+                              draggable={false}
+                              loading="lazy"
+                            />
+                            {/* Optional subtle inner border */}
                             <div className="absolute inset-0 rounded-xl border border-hp-ivory/15 pointer-events-none" />
-                            <span className="text-hp-ivory/80 text-3xl font-bold select-none">
-                              ?
-                            </span>
                           </div>
                         </motion.div>
                       </div>
@@ -2003,7 +2185,7 @@ export default function SpellShuffle() {
                     <div
                       key={p.id}
                       className={[
-                        "rounded-xl border p-3 bg-black/20",
+                        "rounded-xl border p-3 bg-black/20  flex flex-col justify-between h-full",
                         p.tier === "legendary"
                           ? "border-amber-400/40"
                           : p.tier === "epic"
@@ -2011,42 +2193,56 @@ export default function SpellShuffle() {
                           : "border-hp-ivory/20",
                       ].join(" ")}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="font-semibold">{p.name}</div>
-                        <span
-                          className={[
-                            "text-[10px] px-2 py-0.5 rounded-full border",
-                            p.tier === "legendary"
-                              ? "bg-amber-300/10 text-amber-200 border-amber-300/40"
-                              : p.tier === "epic"
-                              ? "bg-purple-300/10 text-purple-200 border-purple-300/40"
-                              : "bg-slate-300/10 text-slate-200 border-slate-300/40",
-                          ].join(" ")}
-                        >
-                          {p.tier.toUpperCase()}
-                        </span>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-semibold">{p.name}</div>
+                          <span
+                            className={[
+                              "text-[10px] px-2 py-0.5 rounded-full border",
+                              p.tier === "legendary"
+                                ? "bg-amber-300/10 text-amber-200 border-amber-300/40"
+                                : p.tier === "epic"
+                                ? "bg-purple-300/10 text-purple-200 border-purple-300/40"
+                                : "bg-slate-300/10 text-slate-200 border-slate-300/40",
+                            ].join(" ")}
+                          >
+                            {p.tier.toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="text-sm opacity-85">{p.desc}</p>
                       </div>
-                      <p className="text-sm opacity-85">{p.desc}</p>
-
                       {inventory.length < 4 ? (
                         <button
-                          className="mt-3 w-full rounded-lg bg-emerald-600 text-white text-sm py-1.5 hover:brightness-110"
+                          className="self-end flex items-center justify-center justify-self-end mt-3 w-full cursor-pointer rounded-lg bg-emerald-600 text-white text-sm py-1.5 hover:brightness-110"
                           onClick={() => {
                             setInventory((inv) => [...inv, p]);
+                            audio.play("boon_picked");
                             continueToNextRound();
                           }}
+                          onMouseEnter={() =>
+                            audio.play("general_hover", {
+                              category: "ui",
+                              oneAtATime: true,
+                            })
+                          }
+                          onFocus={() =>
+                            audio.play("general_hover", {
+                              category: "ui",
+                              oneAtATime: true,
+                            })
+                          }
                         >
                           Select
                         </button>
                       ) : replacingIndex === null ? (
                         <button
-                          className="mt-3 w-full rounded-lg bg-blue-600 text-white text-sm py-1.5 hover:brightness-110"
+                          className="self-end flex items-center justify-center justify-self-end mt-3 w-full rounded-lg bg-blue-600 text-white text-sm py-1.5 hover:brightness-110"
                           onClick={() => setReplacingIndex(p.id)}
                         >
                           Replace a slot…
                         </button>
                       ) : (
-                        <div className="mt-3">
+                        <div className=" mt-3">
                           <div className="text-xs mb-2 opacity-80">
                             Choose a slot to replace:
                           </div>
@@ -2094,8 +2290,26 @@ export default function SpellShuffle() {
 
                 <div className="mt-4 flex justify-end gap-2">
                   <button
-                    className="rounded-lg bg-black/30 border border-hp-ivory/20 text-sm px-3 py-1.5 hover:brightness-110"
-                    onClick={() => continueToNextRound()}
+                    className="cursor-pointer rounded-lg bg-black/30 border border-hp-ivory/20 text-sm px-3 py-1.5 hover:brightness-110"
+                    onClick={() => {
+                      continueToNextRound();
+                      audio.play("button_click", {
+                        category: "ui",
+                        oneAtATime: true,
+                      });
+                    }}
+                    onMouseEnter={() =>
+                      audio.play("general_hover", {
+                        category: "ui",
+                        oneAtATime: true,
+                      })
+                    }
+                    onFocus={() =>
+                      audio.play("general_hover", {
+                        category: "ui",
+                        oneAtATime: true,
+                      })
+                    }
                   >
                     Skip
                   </button>
@@ -2105,7 +2319,7 @@ export default function SpellShuffle() {
           )}
         </AnimatePresence>
         {/* Footer controls */}
-        <div className="fixed bottom-25 z-10 text-center flex justify-center ">
+        <div className="fixed bottom-25 z-30 text-center flex justify-center ">
           {phase === "ready" && (
             <HpButton
               glow
