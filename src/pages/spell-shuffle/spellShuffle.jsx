@@ -58,134 +58,78 @@ const BASE_CARDS = [
 const POWER_UPS = {
   normal: [
     {
-      id: "fleet-i",
-      name: "Fleet Footed I",
+      id: "tempo-i",
+      name: "Calm Tempo I",
       tier: "normal",
-      desc: "Every even round: -60ms shuffle delay.",
-      effect: { evenRoundSpeedBonusMs: -60 },
+      desc: "+60ms shuffle delay.",
+      effect: { delayMsAdd: 60 },
     },
     {
-      id: "quick-i",
-      name: "Quick Hands I",
+      id: "tempo-lite",
+      name: "Gentle Tempo",
       tier: "normal",
-      desc: "Shuffle delay -5%.",
-      effect: { speedMsFactor: 0.95 },
+      desc: "+40ms shuffle delay.",
+      effect: { delayMsAdd: 40 },
     },
     {
       id: "focus-i",
       name: "Focused Mind",
       tier: "normal",
-      desc: "Score x1.1.",
+      desc: "Score ×1.1.",
       effect: { scoreFactor: 1.1 },
     },
     {
       id: "loose-i",
-      name: "Looser Shuffle I",
+      name: "Fewer Shuffles I",
       tier: "normal",
       desc: "Shuffles -2.",
       effect: { swapsDelta: -2 },
     },
     {
-      id: "trace-i",
-      name: "Trace Lock I",
-      tier: "normal",
-      desc: "Target included in ≥ 30% of shuffles.",
-      effect: { minTargetShuffleFraction: 0.3 },
-    },
-    {
-      id: "reveal-i",
-      name: "Longer Reveal I",
-      tier: "normal",
-      desc: "Spotlight lasts +200ms.",
-      effect: { revealMsAdd: 200 },
-    },
-    {
-      id: "tempo-i",
-      name: "Calm Tempo",
-      tier: "normal",
-      desc: "Score x1.2 but -60ms delay.",
-      effect: { scoreFactor: 1.2, speedMsDelta: -60 },
-    },
-    {
       id: "extra-i",
       name: "Extra Shuffles I",
       tier: "normal",
-      desc: "Shuffles +2 and Score x1.05.",
+      desc: "Shuffles +2 and Score ×1.05.",
       effect: { swapsDelta: +2, scoreFactor: 1.05 },
-    },
-    {
-      id: "fleet-ii-lite",
-      name: "Fleet Tweak",
-      tier: "normal",
-      desc: "Shuffle delay -3%.",
-      effect: { speedMsFactor: 0.97 },
-    },
-    {
-      id: "reveal-lite",
-      name: "Reveal Tweak",
-      tier: "normal",
-      desc: "Spotlight lasts +100ms.",
-      effect: { revealMsAdd: 100 },
     },
   ],
   epic: [
     {
-      id: "fleet-ii",
-      name: "Fleet Footed II",
+      id: "tempo-ii",
+      name: "Calm Tempo II",
       tier: "epic",
-      desc: "Every even round: -100ms shuffle delay.",
-      effect: { evenRoundSpeedBonusMs: -100 },
+      desc: "+100ms shuffle delay.",
+      effect: { delayMsAdd: 100 },
     },
     {
-      id: "quick-ii",
-      name: "Quick Hands II",
+      id: "flow",
+      name: "Deep Calm",
       tier: "epic",
-      desc: "Shuffle delay -10%.",
-      effect: { speedMsFactor: 0.9 },
+      desc: "+80ms shuffle delay.",
+      effect: { delayMsAdd: 80 },
     },
     {
       id: "mastery",
       name: "Mastery",
       tier: "epic",
-      desc: "Score x1.25.",
+      desc: "Score ×1.25.",
       effect: { scoreFactor: 1.25 },
-    },
-    {
-      id: "reveal-ii",
-      name: "Longer Reveal II",
-      tier: "epic",
-      desc: "Spotlight lasts +400ms.",
-      effect: { revealMsAdd: 400 },
-    },
-    {
-      id: "trace-ii",
-      name: "Trace Lock II",
-      tier: "epic",
-      desc: "Target included in ≥ 40% of shuffles.",
-      effect: { minTargetShuffleFraction: 0.4 },
     },
   ],
   legendary: [
     {
       id: "timewarp",
-      name: "Time Warp",
+      name: "Time Dilation",
       tier: "legendary",
-      desc: "Shuffle delay -20% and -120ms on even rounds.",
-      effect: { speedMsFactor: 0.8, evenRoundSpeedBonusMs: -120 },
+      desc: "+160ms shuffle delay.",
+      effect: { delayMsAdd: 160 },
     },
     {
       id: "jackpot",
       name: "Jackpot",
       tier: "legendary",
-      desc: "Score x1.5.",
+      desc: "Score ×1.5.",
       effect: { scoreFactor: 1.5 },
-    },
-    {
-      id: "oracle",
-      name: "Oracle",
-      tier: "legendary",
-      desc: "Spotlight +600ms and target in ≥ 50% of shuffles.",
-      effect: { revealMsAdd: 600, minTargetShuffleFraction: 0.5 },
     },
   ],
 };
@@ -196,6 +140,8 @@ const RNG_WEIGHTS = [
   { tier: "epic", w: 25 },
   { tier: "normal", w: 70 },
 ];
+
+const SPEED_LIMITS = { minMs: 120, maxMs: 1200 };
 
 // NEW: rotating tips for the loader
 const LOADING_TIPS = [
@@ -223,11 +169,13 @@ function shuffle(arr) {
   }
   return a;
 }
+
 function swapAt(arr, i, j) {
   const copy = arr.slice();
   [copy[i], copy[j]] = [copy[j], copy[i]];
   return copy;
 }
+
 function sampleWithout(array, n, excludeId) {
   const pool = array.filter((x) => x.id !== excludeId);
   return shuffle(pool).slice(0, n);
@@ -256,15 +204,19 @@ function pickDistinct(count, max, mustIncludeIndex) {
   return Array.from(set);
 }
 
+function clampSpeedMs(ms) {
+  return Math.min(SPEED_LIMITS.maxMs, Math.max(SPEED_LIMITS.minMs, ms));
+}
+
 // NEW: decide cycle size by difficulty
 function getCycleSize(cardCount, round) {
-  if (cardCount >= 12 || round >= 8) {
+  if (round >= 10) {
     const r = Math.random();
-    if (r < 0.45) return 4;
+    if (r < 0.45) return 3;
     if (r < 0.85) return 3;
     return 2;
   }
-  if (cardCount >= 9 || round >= 5) {
+  if (round >= 7) {
     return Math.random() < 0.65 ? 3 : 2;
   }
   return 2;
@@ -301,29 +253,15 @@ function drawDraftPicks(count, excludeIds = []) {
 // Aggregate active modifiers from inventory for a nextRound
 function getActiveModifiers(inventory, nextRound) {
   const agg = {
-    speedMsDelta: 0,
-    speedMsFactor: 1,
-    scoreFactor: 1,
-    swapsDelta: 0,
-    minTargetShuffleFraction: null,
-    revealMsAdd: 0,
+    delayMsAdd: 0, // +ms to slow shuffles
+    scoreFactor: 1, // × score
+    swapsDelta: 0, // ± total shuffles
   };
   for (const p of inventory) {
     const fx = p.effect || {};
-    if (fx.speedMsDelta) agg.speedMsDelta += fx.speedMsDelta;
-    if (fx.speedMsFactor) agg.speedMsFactor *= fx.speedMsFactor;
+    if (fx.delayMsAdd) agg.delayMsAdd += fx.delayMsAdd;
     if (fx.scoreFactor) agg.scoreFactor *= fx.scoreFactor;
     if (fx.swapsDelta) agg.swapsDelta += fx.swapsDelta;
-    if (fx.revealMsAdd) agg.revealMsAdd += fx.revealMsAdd;
-    if (typeof fx.minTargetShuffleFraction === "number") {
-      agg.minTargetShuffleFraction =
-        agg.minTargetShuffleFraction == null
-          ? fx.minTargetShuffleFraction
-          : Math.max(agg.minTargetShuffleFraction, fx.minTargetShuffleFraction);
-    }
-    if (fx.evenRoundSpeedBonusMs && nextRound % 2 === 0) {
-      agg.speedMsDelta += fx.evenRoundSpeedBonusMs;
-    }
   }
   return agg;
 }
@@ -336,7 +274,8 @@ export default function SpellShuffle() {
   const [targetName, setTargetName] = useState(null);
   const [phase, setPhase] = useState("init"); // init | enter | showTarget | cover | shuffling | guess | result | gameover
   const [shufflesLeft, setShufflesLeft] = useState(0);
-  const [speedMs, setSpeedMs] = useState(700);
+  const [speedMs, setSpeedMs] = useState(computeDifficulty(1).speed); // CHANGED: start at Slow
+  const baseRoundMultiplierRef = useRef(1); // NEW: base tier multiplier for scoring
   const [clickedId, setClickedId] = useState(null);
   const [tossingId, setTossingId] = useState(null);
   const [visibleCount, setVisibleCount] = useState(0);
@@ -348,7 +287,6 @@ export default function SpellShuffle() {
   const displayScore = Math.round(score * 10) / 10; // Tidy score display
   const [inventory, setInventory] = useState([]); // array of power-up objects
   const [draftPicks, setDraftPicks] = useState([]);
-  const [replacingIndex, setReplacingIndex] = useState(null); // pick slot to replace when full
   const [modPreview, setModPreview] = useState(null); // NEW: last compute vs modified
   const [showModPreview, setShowModPreview] = useState(false); // NEW: panel visibility
   const shufflesPerSec = Math.round((1000 / speedMs) * 10) / 10; // Human-readable speed
@@ -425,10 +363,12 @@ export default function SpellShuffle() {
   // Refs for timers and intervals
   const startOverlayTimerRef = useRef(null);
   const startRoundTimerRef = useRef(null); // NEW: delay kickoff until curtains are in
-  const lastSpeedLabelRef = useRef(null);
+  const lastCardCountRef = useRef(0);
+  const lastBaseSpeedRef = useRef(computeDifficulty(1).speed);
+  const lastBaseSwapsRef = useRef(computeDifficulty(1).swaps);
   const timerRef = useRef(null);
   const intervalRef = useRef(null);
-  const targetShuffleCountRef = useRef(0);
+  // const targetShuffleCountRef = useRef(0);
   const totalShufflesRef = useRef(0);
   const minTargetShuffleFracRef = useRef(1 / 3);
   const revealBonusMsRef = useRef(0);
@@ -437,6 +377,8 @@ export default function SpellShuffle() {
   const wasStartingRef = useRef(false);
   const prevVisibleRef = useRef(0);
   const lastHoverAtRef = useRef(0); // NEW: throttle hover SFX
+  const roundPointsRef = useRef(1); // NEW: canonical points for this round
+  const continueAfterDraftRef = useRef(false); // NEW: gate curtain until draft closes
 
   // Shuffle progress
   const totalShuffles = totalShufflesRef.current || 0;
@@ -622,18 +564,33 @@ export default function SpellShuffle() {
     });
   };
 
-  // Play speed change SFX (throttled)
+  const [curtainMeta, setCurtainMeta] = useState({
+    round: 1,
+    cards: computeDifficulty(1).count,
+    showCards: false,
+  });
+
+  // Play SFX when any curtain chip (cards/speed/shuffles) is displayed
   useEffect(() => {
-    const prev = lastSpeedLabelSfxRef.current;
-    if (prev && prev !== speedLabel) {
+    if (!isStarting) return;
+    if (
+      curtainMeta.showCards ||
+      curtainMeta.showSpeed ||
+      curtainMeta.showSwaps
+    ) {
       audio.play("speed_changed", {
         category: "sfx",
         oneAtATime: true,
         volume: 0.8,
       });
     }
-    lastSpeedLabelSfxRef.current = speedLabel;
-  }, [speedLabel]);
+  }, [
+    isStarting,
+    curtainMeta.round,
+    curtainMeta.showCards,
+    curtainMeta.showSpeed,
+    curtainMeta.showSwaps,
+  ]);
 
   // Phase → SFX (fires once per phase change)
   const lastPhaseRef = useRef(null);
@@ -677,12 +634,30 @@ export default function SpellShuffle() {
     }
   }
 
+  // Sequential chip entrance variants (top → bottom)
+  const chipStackVariants = {
+    hidden: {},
+    visible: {
+      transition: { staggerChildren: 0.14, delayChildren: 0.06 },
+    },
+  };
+
+  const chipVariants = {
+    hidden: { y: 8, opacity: 0, scale: 0.98 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.25, ease: "easeOut" },
+    },
+  };
+
   // Reset all power-ups and their aggregated refs
   function clearPowerUps() {
     setInventory([]);
     setDraftPicks([]);
-    setReplacingIndex(null);
-    minTargetShuffleFracRef.current = 1 / 3;
+    // setReplacingIndex(null); // removed: no replace flow
+    // minTargetShuffleFracRef.current = 1 / 3;
     revealBonusMsRef.current = 0;
     scoringFactorRef.current = 1;
   }
@@ -710,6 +685,11 @@ export default function SpellShuffle() {
       setMusicMuted(true);
     }
     audio.play("general_click", { category: "ui", oneAtATime: true });
+  }
+
+  // Helper: should draft after finishing rounds 3, 6, 9, 12 (if inventory not full)
+  function shouldOpenDraft(currentRound, inv) {
+    return currentRound % 3 === 0 && (inv?.length ?? 0) < 4;
   }
 
   function handleMusicVolumeChange(e) {
@@ -772,18 +752,34 @@ export default function SpellShuffle() {
         : sps >= 1.2
         ? "Normal"
         : "Slow";
-
-    // Points multiplier mapping
-    let multiplier = 1;
-    if (label === "Slow") multiplier = 0.5;
-    else if (label === "Normal") multiplier = 1;
-    else if (label === "Fast") multiplier = 2;
-    else {
-      const extra = Math.max(0, Math.floor((sps - 3) * 10) / 10);
-      multiplier = +(3 + extra).toFixed(1);
-    }
-
+    // keep a UI multiplier if you show it elsewhere; not used for scoring
+    const multiplier =
+      label === "Very fast"
+        ? 3
+        : label === "Fast"
+        ? 2
+        : label === "Normal"
+        ? 1
+        : 0.5;
     return { label, sps, multiplier };
+  }
+
+  // NEW: base multiplier by round-block (0.5 → 3.0 cap)
+  function getBaseMultiplierForRound(r) {
+    const block = Math.floor((r - 1) / 3); // 0,1,2,3,4,...
+    const base = 0.5 + 0.5 * Math.min(block, 5); // 0.5,1.0,1.5,2.0,2.5,3.0
+    return +Math.min(3, base).toFixed(1);
+  }
+
+  // NEW: speed bonus from current speed label (after boons)
+  function getSpeedBonusFromLabel(label) {
+    return label === "Very fast"
+      ? 3
+      : label === "Fast"
+      ? 2
+      : label === "Normal"
+      ? 1
+      : 0;
   }
 
   // Format helpers (UI only)
@@ -797,49 +793,49 @@ export default function SpellShuffle() {
     return `${Math.round(frac * 100)}%`;
   }
   function effectLines(effect = {}) {
-    // simple descriptions for tooltip
     const lines = [];
-    if (effect.evenRoundSpeedBonusMs)
-      lines.push(`Even rounds: ${effect.evenRoundSpeedBonusMs}ms faster`);
-    if (effect.speedMsDelta)
-      lines.push(
-        `${effect.speedMsDelta > 0 ? "+" : ""}${
-          effect.speedMsDelta
-        }ms shuffle delay`
-      );
-    if (effect.speedMsFactor)
-      lines.push(`Shuffle delay ×${effect.speedMsFactor}`);
-    if (effect.scoreFactor) lines.push(`Score ×${effect.scoreFactor}`);
+    if (effect.delayMsAdd) lines.push(`+${effect.delayMsAdd}ms shuffle delay`);
     if (effect.swapsDelta)
       lines.push(
         `${effect.swapsDelta > 0 ? "+" : ""}${effect.swapsDelta} shuffles`
       );
-    if (typeof effect.minTargetShuffleFraction === "number")
-      lines.push(
-        `Target in ≥ ${fmtFrac(effect.minTargetShuffleFraction)} of shuffles`
-      );
-    if (effect.revealMsAdd) lines.push(`Spotlight +${effect.revealMsAdd}ms`);
+    if (effect.scoreFactor) lines.push(`Score ×${effect.scoreFactor}`);
     if (!lines.length) lines.push("No additional effects");
     return lines;
   }
 
-  const [curtainMeta, setCurtainMeta] = useState({
-    round: 1,
-    speedLabel: "",
-    sps: 0,
-    showSpeed: false,
-    multiplier: 1, // NEW
-  });
-
-  // Difficulty scaling (up to 12 cards, 2 rows of 6 on md+)
+  // Difficulty scaling (3-round blocks; caps cards at 12)
   function computeDifficulty(r) {
-    // Rounds 1-2:4, 3-4:6, 5-6:8, 7-8:10, 9+:12
-    const sequence = [4, 6, 8, 10, 12];
-    const step = Math.floor((r - 1) / 2); // grow every 2 rounds
-    const idx = Math.min(step, sequence.length - 1);
-    const count = sequence[idx];
-    const speed = Math.max(800 - (r - 1) * 60, 250);
-    const swaps = 6 + r * 2;
+    // Block: 0 = rounds 1-3, 1 = 4-6, 2 = 7-9, 3 = 10-12, etc.
+    const block = Math.floor((r - 1) / 3);
+
+    // Cards per block (cap at 12)
+    const countSeq = [4, 6, 8, 10, 12];
+    const count = countSeq[Math.min(block, countSeq.length - 1)];
+
+    // Base speed per block (ms) → aligns with getSpeedMeta thresholds:
+    // Slow(<1.2sps), Normal(>=1.2), Fast(>=2), Very fast(>=3)
+    const speedTable = [1000, 700, 450, 300]; // Slow, Normal, Fast, Very fast
+    let speed;
+    if (r <= 12) {
+      speed =
+        block < speedTable.length
+          ? speedTable[block]
+          : speedTable[speedTable.length - 1];
+    } else {
+      const base = 300;
+      const extraRounds = r - 12;
+      speed = Math.max(SPEED_LIMITS.minMs, base - extraRounds * 20);
+    }
+
+    // Base swaps per block; after block 4, add +2 per block
+    const swapsTable = [8, 12, 16, 20, 24];
+    let swaps =
+      block < swapsTable.length
+        ? swapsTable[block]
+        : swapsTable[swapsTable.length - 1] +
+          (block - (swapsTable.length - 1)) * 2;
+
     return { count, speed, swaps };
   }
 
@@ -853,49 +849,46 @@ export default function SpellShuffle() {
 
     const { count, speed, swaps } = computeDifficulty(nextRound);
 
-    // APPLY ACTIVE MODIFIERS
+    // APPLY ACTIVE MODIFIERS (rebalance)
     const mods = getActiveModifiers(inventory, nextRound);
-    let modSpeed = Math.max(
-      120,
-      Math.round((speed + (mods.speedMsDelta || 0)) * (mods.speedMsFactor || 1))
-    );
-    let modSwaps = Math.max(0, swaps + (mods.swapsDelta || 0));
-    const minFrac = Math.max(1 / 3, mods.minTargetShuffleFraction ?? 0); // keep ≥ base
-    minTargetShuffleFracRef.current = minFrac;
-    revealBonusMsRef.current = mods.revealMsAdd || 0;
+    const rawMs = speed + (mods.delayMsAdd || 0);
+    const modSpeed = clampSpeedMs(rawMs);
+    const modSwaps = Math.max(0, swaps + (mods.swapsDelta || 0));
     scoringFactorRef.current = mods.scoreFactor || 1;
 
-    // Build preview (base vs modified)
+    // Build preview (now use base + speed-bonus → points)
     const baseMeta = getSpeedMeta(speed);
     const modMeta = getSpeedMeta(modSpeed);
-    const basePreview = {
-      speedMs: speed,
-      sps: baseMeta.sps,
-      swaps,
-      minFrac: 1 / 3,
-      revealMs: 1200,
-      speedMult: baseMeta.multiplier,
-      powMult: 1,
-    };
-    const modPreviewData = {
-      speedMs: modSpeed,
-      sps: modMeta.sps,
-      swaps: modSwaps,
-      minFrac,
-      revealMs: 1200 + (revealBonusMsRef.current || 0),
-      speedMult: modMeta.multiplier,
-      // powMult: scoringFactorRef.current || 1,   // OLD
-      powMult: mods.scoreFactor || 1, // NEW: use fresh aggregate
-    };
+
+    const baseMult = getBaseMultiplierForRound(nextRound);
+    const speedBonus = getSpeedBonusFromLabel(modMeta.label);
+
+    baseRoundMultiplierRef.current = baseMult; // now stores base multiplier for round
+
+    const canonicalPoints = +(
+      (baseMult + speedBonus) *
+      scoringFactorRef.current
+    ).toFixed(1);
+    roundPointsRef.current = canonicalPoints; // single source of truth
+
     setModPreview({
-      base: basePreview,
-      mod: modPreviewData,
-      totalPoints: +(modPreviewData.speedMult * modPreviewData.powMult).toFixed(
-        1
-      ),
+      base: {
+        speedMs: speed,
+        sps: baseMeta.sps,
+        swaps,
+        baseMult,
+      },
+      mod: {
+        speedMs: modSpeed,
+        sps: modMeta.sps,
+        swaps: modSwaps,
+        speedBonus,
+        powMult: scoringFactorRef.current,
+      },
+      totalPoints: canonicalPoints,
     });
 
-    // Build round cards (unchanged)
+    // Build round cards
     const target = BASE_CARDS[Math.floor(Math.random() * BASE_CARDS.length)];
     const distractors = sampleWithout(BASE_CARDS, count - 1, target.id);
     const subset = shuffle([target, ...distractors]);
@@ -908,31 +901,37 @@ export default function SpellShuffle() {
     totalShufflesRef.current = modSwaps;
     setSpeedMs(modSpeed);
     setClickedId(null);
-    targetShuffleCountRef.current = 0;
     setVisibleCount(0);
 
-    // Curtains / delays (respect speed tier change)
-    const { label } = modMeta;
-    const showSpeedChanged = lastSpeedLabelRef.current !== label;
-    lastSpeedLabelRef.current = label;
+    const showCardsIncreased = (lastCardCountRef.current ?? 0) < count;
+    lastCardCountRef.current = count;
+
+    // Curtains / hold time: extend if any base stat changed
+    const cardsChanged = (lastCardCountRef.current ?? 0) < count;
+    const speedChanged = (lastBaseSpeedRef.current ?? speed) > speed; // faster (ms down)
+    const swapsChanged = (lastBaseSwapsRef.current ?? 0) < swaps;
+
+    // Update "last" refs to new base values for subsequent comparisons
+    lastCardCountRef.current = count;
+    lastBaseSpeedRef.current = speed;
+    lastBaseSwapsRef.current = swaps;
 
     const baseCurtainHoldMs = 900;
-    const overlayHideMs = showSpeedChanged ? 1400 : baseCurtainHoldMs;
+    const hasChips = cardsChanged || speedChanged || swapsChanged;
+    const overlayHideMs = baseCurtainHoldMs + (hasChips ? 2000 : 0); // keep curtain closed +2000ms when showing chips
+
     const extraHold = overlayHideMs - baseCurtainHoldMs;
     setEnterDelayMs(700 + extraHold);
 
     if (startOverlayTimerRef.current)
       clearTimeout(startOverlayTimerRef.current);
-
     startOverlayTimerRef.current = setTimeout(() => {
       setIsStarting(false);
-      // setHudKey((k) => k + 1); // remove re-keying to prevent reanimation
       setShowModPreview(inventory.length > 0);
     }, overlayHideMs);
 
     setPhase("enter");
   }
-
   // Phase machine (timed transitions)
   useEffect(() => {
     clearTimers();
@@ -974,30 +973,15 @@ export default function SpellShuffle() {
         timerRef.current = setTimeout(() => {
           audio.play("card_shuffle", {
             category: "sfx",
-            oneAtATime: true, // prevents stacking when speed is high
-            // rate: Math.min(1.2, Math.max(0.85, 700 / speedMs)), // optional pitch by speed
+            oneAtATime: true,
           });
 
           setCards((prev) => {
             if (prev.length < 2) return prev;
 
+            // Simple random swap/rotate; no forced target inclusion
             const size = getCycleSize(prev.length, round);
-            const targetIdx = prev.findIndex((c) => c.id === targetId);
-
-            const requiredMin = Math.ceil(
-              (totalShufflesRef.current || 0) *
-                (minTargetShuffleFracRef.current || 1 / 3)
-            );
-            const forceIncludeTarget =
-              targetIdx !== -1 && targetShuffleCountRef.current < requiredMin;
-
-            const indices = forceIncludeTarget
-              ? pickDistinct(size, prev.length, targetIdx)
-              : pickDistinct(size, prev.length);
-
-            if (indices.includes(targetIdx)) {
-              targetShuffleCountRef.current += 1;
-            }
+            const indices = pickDistinct(size, prev.length);
 
             if (size === 2) {
               const [i, j] = indices;
@@ -1017,43 +1001,41 @@ export default function SpellShuffle() {
   function handleGuess(id) {
     if (phase !== "guess") return;
     setClickedId(id);
-
-    // Flip sound
-    audio.play("card_flip", {
-      category: "sfx",
-    });
+    audio.play("card_flip", { category: "sfx" });
 
     if (id === targetId) {
-      const { multiplier } = getSpeedMeta(speedMs);
-      const { scoreFactor: powMult } = getActiveModifiers(inventory, round);
-      const totalMult = multiplier * (powMult || 1);
-      setLastGain(totalMult); // NEW
-      setScore((s) => s + totalMult);
-      // Correct guess sound
+      const total = roundPointsRef.current; // canonical points for this round
+      setLastGain(total);
+      setScore((s) => s + total);
       audio.play("correct_guess", { category: "sfx" });
       setPhase("result");
     } else {
-      // Wrong guess sound
       audio.play("wrong_guess", { category: "sfx" });
-      setLastGain(0); // NEW
+      setLastGain(0);
       setPhase("gameover");
     }
   }
 
   // Drafting
   function openDraft() {
+    // Force curtain to stay open until user selects/skip a boon
+    setIsStarting(false);
+
+    // If full, skip draft entirely
+    if (inventory.length >= 4) {
+      continueToNextRound();
+      return;
+    }
     // 3 random picks, avoid duplicates already owned
     const ownedIds = inventory.map((p) => p.id);
     const picks = drawDraftPicks(3, ownedIds);
     audio.play("boon_draft_opened", { category: "sfx" });
     setDraftPicks(picks);
-    setReplacingIndex(null);
     setPhase("draft"); // NEW phase
   }
 
   function continueToNextRound() {
-    // audio.play("next_round", { category: "ui" });
-    // Curtain in
+    // Curtain in only happens here (after boon chosen or skip)
     audio.play("curtain_in", { category: "sfx" });
 
     const next = round + 1;
@@ -1067,8 +1049,8 @@ export default function SpellShuffle() {
   }
 
   function goToNextRound() {
-    // Every 3 rounds, open draft instead of immediate curtain
-    if (round % 3 === 0) {
+    // If a boon draft should appear, DO NOT close curtains yet — open draft first
+    if (shouldOpenDraft(round, inventory)) {
       openDraft();
       return;
     }
@@ -1091,6 +1073,8 @@ export default function SpellShuffle() {
     if (startRoundTimerRef.current) clearTimeout(startRoundTimerRef.current);
     startRoundTimerRef.current = setTimeout(() => {
       startRound(1);
+      // Debugging, start from round 3
+      // startRound(3);
     }, 520); // match curtain slide-in
   }
 
@@ -1107,21 +1091,19 @@ export default function SpellShuffle() {
     setTargetName(null);
     setClickedId(null);
     setShufflesLeft(0);
-    setSpeedMs(700);
+    setSpeedMs(computeDifficulty(1).speed); // CHANGED: reset to Slow base
     setIsStarting(false);
     setHeroOut(false);
     setVisibleCount(0);
     setEnterDelayMs(700);
-    targetShuffleCountRef.current = 0;
+    // targetShuffleCountRef.current = 0;
     totalShufflesRef.current = 0;
-    lastSpeedLabelRef.current = null; // IMPORTANT: allow speed tier to show again
+    lastCardCountRef.current = 0;
     clearPowerUps();
     setCurtainMeta({
       round: 1,
-      speedLabel: "",
-      sps: 0,
-      showSpeed: false,
-      multiplier: 1,
+      cards: computeDifficulty(1).count,
+      showCards: false, // keep hidden on first round
     });
     setPhase("init");
   }
@@ -1139,15 +1121,33 @@ export default function SpellShuffle() {
   const twoRowsMd = cards.length > 7;
 
   function primeCurtainForRound(nextRound) {
-    const { speed } = computeDifficulty(nextRound);
-    const meta = getSpeedMeta(speed);
-    const showSpeed = lastSpeedLabelRef.current !== meta.label; // first time per tier
+    const next = computeDifficulty(nextRound);
+
+    const isFirstRound = nextRound === 1;
+    const showCards =
+      !isFirstRound && (lastCardCountRef.current ?? 0) < next.count;
+    const showSpeed = (lastBaseSpeedRef.current ?? next.speed) > next.speed; // ms down = faster
+    const showSwaps = (lastBaseSwapsRef.current ?? 0) < next.swaps;
+
     setCurtainMeta({
       round: nextRound,
-      speedLabel: meta.label,
-      sps: meta.sps,
+
+      // Cards
+      cards: next.count,
+      cardsPrev: isFirstRound
+        ? next.count
+        : lastCardCountRef.current || next.count,
+      showCards,
+
+      // Base shuffle delay (ms)
+      speed: next.speed,
+      speedPrev: lastBaseSpeedRef.current || next.speed,
       showSpeed,
-      multiplier: meta.multiplier, // NEW
+
+      // Total shuffles
+      swaps: next.swaps,
+      swapsPrev: lastBaseSwapsRef.current || next.swaps,
+      showSwaps,
     });
   }
 
@@ -1397,7 +1397,7 @@ export default function SpellShuffle() {
                   </div>
                   <div className="px-3 py-1 rounded-full bg-hp-royal/60 border border-hp-ivory/15">
                     Rounds:{" "}
-                    <span className="font-semibold">get harder every 2</span>
+                    <span className="font-semibold">get harder every 3</span>
                   </div>
                 </div>
 
@@ -1425,7 +1425,7 @@ export default function SpellShuffle() {
                     text={"Start Game"}
                   />
 
-                  <Link to="/home" passHref>
+                  <Link to="/home">
                     <button
                       className="flex items-center gap-2 px-3 py-1 rounded-full bg-hp-royal/60 border border-hp-ivory/15 text-sm text-hp-ivory transition duration-200 hover:bg-hp-royal/80 hover:brightness-125 hover:shadow-lg cursor-pointer"
                       onClick={() =>
@@ -1561,42 +1561,84 @@ export default function SpellShuffle() {
                 transition={{ duration: 0.45, ease: "easeOut" }}
               >
                 <div className="relative flex flex-col items-center gap-3">
-                  {/* Round badge (primary) */}
-                  <div className="px-6 py-3 rounded-full border border-amber-300/40 bg-black/30 text-amber-200/90 shadow-[0_0_30px_rgba(255,214,127,0.2)_inset]">
-                    <span className="font-bold tracking-wide">
-                      Round {curtainMeta.round}
-                    </span>
-                  </div>
+                  {/* Round plaque (larger, more emphasis; no shine) */}
+                  <motion.div
+                    className="relative px-7 py-4 rounded-2xl border border-amber-300/50 bg-black/45 text-amber-200/95 shadow-[0_0_40px_rgba(255,214,127,0.18)_inset,0_0_24px_rgba(255,214,127,0.08)]"
+                    initial={{ scale: 0.96, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                  >
+                    <div className="text-[11px] uppercase tracking-wider opacity-85 text-amber-100/90 text-center">
+                      Round
+                    </div>
+                    <div className="leading-none text-center mt-0.5">
+                      <span className="text-4xl sm:text-5xl font-black drop-shadow">
+                        {curtainMeta.round}
+                      </span>
+                    </div>
+                  </motion.div>
 
-                  {/* Speed chip (only when tier changed) */}
-                  {curtainMeta.showSpeed && (
-                    <motion.div
-                      className="px-3 py-1 rounded-full border border-amber-200/30 bg-black/30 text-amber-100/90 text-sm"
-                      initial={{ y: 6, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -6, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    >
-                      <span>
-                        Speed:{" "}
-                        <span className="font-semibold">
-                          {curtainMeta.speedLabel}
-                        </span>
-                      </span>
-                      {/* Show multiplier alongside speed only up to 3.0x */}
-                      {curtainMeta.multiplier <= 3 && (
-                        <span className="ml-2">
-                          • Points{" "}
-                          <span className="font-semibold">
-                            x{curtainMeta.multiplier.toFixed(1)}
+                  {/* Staggered value chips (top → bottom) */}
+                  <motion.div
+                    className="flex flex-col items-center gap-2.5"
+                    variants={chipStackVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    {/* Cards chip (only when card count increased) */}
+                    {curtainMeta.showCards && (
+                      <motion.div
+                        className="curtain-chip inline-flex items-center justify-center px-3 py-1.5 leading-none rounded-full border border-amber-200/40 bg-black/35 text-amber-100/95 text-sm shadow-[0_0_20px_rgba(0,0,0,0.25)]"
+                        variants={chipVariants}
+                      >
+                        <span className="inline-flex items-center gap-2 align-middle">
+                          <ArrowUp className="w-4 h-4 opacity-80 relative top-[0.5px]" />
+                          <span>Cards:</span>
+                          <span className="font-semibold opacity-90">
+                            {curtainMeta.cardsPrev}
                           </span>
+                          <span className="opacity-70">→</span>
+                          <span className="new">{curtainMeta.cards}</span>
                         </span>
-                      )}
-                      <span className="ml-2 opacity-80">
-                        ({curtainMeta.sps}/s)
-                      </span>
-                    </motion.div>
-                  )}
+                      </motion.div>
+                    )}
+
+                    {/* Base shuffle delay chip (shows when faster than before) */}
+                    {curtainMeta.showSpeed && (
+                      <motion.div
+                        className="curtain-chip inline-flex items-center justify-center px-3 py-1.5 leading-none rounded-full border border-amber-200/40 bg-black/35 text-amber-100/95 text-sm shadow-[0_0_20px_rgba(0,0,0,0.25)]"
+                        variants={chipVariants}
+                      >
+                        <span className="inline-flex items-center gap-2 align-middle">
+                          <ArrowUp className="w-4 h-4 opacity-80 relative top-[0.5px]" />
+                          <span>Shuffle delay:</span>
+                          <span className="font-semibold opacity-90">
+                            {curtainMeta.speedPrev}ms
+                          </span>
+                          <span className="opacity-70">→</span>
+                          <span className="new">{curtainMeta.speed}ms</span>
+                        </span>
+                      </motion.div>
+                    )}
+
+                    {/* Shuffles chip (only when increased) */}
+                    {curtainMeta.showSwaps && (
+                      <motion.div
+                        className="curtain-chip inline-flex items-center justify-center px-3 py-1.5 leading-none rounded-full border border-amber-200/40 bg-black/35 text-amber-100/95 text-sm shadow-[0_0_20px_rgba(0,0,0,0.25)]"
+                        variants={chipVariants}
+                      >
+                        <span className="inline-flex items-center gap-2 align-middle">
+                          <ArrowUp className="w-4 h-4 opacity-80 relative top-[0.5px]" />
+                          <span>Shuffles:</span>
+                          <span className="font-semibold opacity-90">
+                            {curtainMeta.swapsPrev}
+                          </span>
+                          <span className="opacity-70">→</span>
+                          <span className="new">{curtainMeta.swaps}</span>
+                        </span>
+                      </motion.div>
+                    )}
+                  </motion.div>
                 </div>
               </motion.div>
             </motion.div>
@@ -1636,7 +1678,7 @@ export default function SpellShuffle() {
                   })
                 }
               >
-                <Link to="/home" passHref>
+                <Link to="/home">
                   <button className="flex items-center cursor-pointer gap-2 px-3 py-1 rounded-full z-20 bg-hp-royal/60 border border-hp-ivory/15 text-sm text-hp-ivory transition duration-200 hover:bg-hp-royal/80 hover:brightness-125 hover:shadow-lg">
                     <ArrowLeft className="w-4" />
                     <span>Back to Home</span>
@@ -1741,10 +1783,7 @@ export default function SpellShuffle() {
                   <span className="font-extrabold text-xl">{displayScore}</span>
                   <span className="text-xs opacity-75">•</span>
                   <span className="text-sm">
-                    x
-                    <span className="font-semibold">
-                      {currentMultiplier.toFixed(1)}
-                    </span>
+                    x{modPreview.totalPoints.toFixed(1)}
                   </span>
                 </div>
                 {/* Speed chip (color-coded, animates on tier change) */}
@@ -2074,10 +2113,12 @@ export default function SpellShuffle() {
                       {/* State ring overlay lives in the viewport */}
                       <div
                         className={[
-                          "pointer-events-none absolute inset-0 rounded-xl animate-all",
-                          highlighting
-                            ? "ring-2 ring-hp-ivory "
-                            : "ring-0 ring-hp-ivory/20",
+                          "pointer-events-none absolute inset-0 rounded-xl animate-all transition-[box-shadow]",
+                          highlighting && phase === "showTarget"
+                            ? "shadow-[0_0_32px_8px_rgba(255,214,127,0.7),0_0_0_2px_rgba(255,214,127,0.6)]"
+                            : phase === "ready" && isTarget
+                            ? "shadow-[0_0_0_3px_rgba(255,214,127,0.7)]"
+                            : "shadow-none",
                         ].join(" ")}
                       />
                       {/* 3D viewport wrapper: carries border/clip, NOT the rotator */}
@@ -2130,7 +2171,7 @@ export default function SpellShuffle() {
 
                           {/* Back face (solid) */}
                           <div
-                            className="absolute  inset-0 grid place-items-center rounded-xl overflow-hidden"
+                            className="absolute inset-0 grid place-items-center rounded-xl overflow-hidden"
                             style={{
                               transform: "rotateY(180deg)",
                               backfaceVisibility: "hidden",
@@ -2141,7 +2182,7 @@ export default function SpellShuffle() {
                             <img
                               src="/images/cards/back.png"
                               alt="Card back"
-                              className="w-full h-full object-cover border rounded-xl border-hp-ivory/50 select-none"
+                              className="w-full h-full object-cover border rounded-xl border-hp-ivory/25 select-none"
                               draggable={false}
                               loading="lazy"
                             />
@@ -2157,7 +2198,15 @@ export default function SpellShuffle() {
           </motion.div>
         </div>
         {/* // Draft overlay */}
-        <AnimatePresence>
+        <AnimatePresence
+          onExitComplete={() => {
+            // Fire after draft overlay fully unmounts
+            if (continueAfterDraftRef.current) {
+              continueAfterDraftRef.current = false;
+              continueToNextRound(); // triggers curtain-in → speed-change SFX via chips effect
+            }
+          }}
+        >
           {phase === "draft" && (
             <motion.div
               className="fixed inset-0 z-[70] grid place-items-center"
@@ -2211,79 +2260,37 @@ export default function SpellShuffle() {
                         </div>
                         <p className="text-sm opacity-85">{p.desc}</p>
                       </div>
-                      {inventory.length < 4 ? (
-                        <button
-                          className="self-end flex items-center justify-center justify-self-end mt-3 w-full cursor-pointer rounded-lg bg-emerald-600 text-white text-sm py-1.5 hover:brightness-110"
-                          onClick={() => {
-                            setInventory((inv) => [...inv, p]);
-                            audio.play("boon_picked");
-                            continueToNextRound();
-                          }}
-                          onMouseEnter={() =>
-                            audio.play("general_hover", {
-                              category: "ui",
-                              oneAtATime: true,
-                            })
+
+                      {/* Only selection, no replace UI */}
+                      <button
+                        className="self-end flex items-center justify-center justify-self-end mt-3 w-full cursor-pointer rounded-lg bg-emerald-600 text-white text-sm py-1.5 hover:brightness-110"
+                        onClick={() => {
+                          // Guard in case of race; shouldn't open when full
+                          if (inventory.length >= 4) {
+                            continueAfterDraftRef.current = true;
+                            setPhase("result"); // close draft first
+                            return;
                           }
-                          onFocus={() =>
-                            audio.play("general_hover", {
-                              category: "ui",
-                              oneAtATime: true,
-                            })
-                          }
-                        >
-                          Select
-                        </button>
-                      ) : replacingIndex === null ? (
-                        <button
-                          className="self-end flex items-center justify-center justify-self-end mt-3 w-full rounded-lg bg-blue-600 text-white text-sm py-1.5 hover:brightness-110"
-                          onClick={() => setReplacingIndex(p.id)}
-                        >
-                          Replace a slot…
-                        </button>
-                      ) : (
-                        <div className=" mt-3">
-                          <div className="text-xs mb-2 opacity-80">
-                            Choose a slot to replace:
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {inventory.map((owned, idx) => (
-                              <button
-                                key={owned.id}
-                                className="rounded-lg border border-hp-ivory/20 bg-black/20 px-2 py-1.5 text-left hover:border-emerald-400/40"
-                                onClick={() => {
-                                  setInventory((inv) => {
-                                    const next = inv.slice();
-                                    const repIdx = inv.findIndex(
-                                      (x) => x.id === owned.id
-                                    );
-                                    const pick = [...draftPicks].find(
-                                      (x) => x.id === replacingIndex
-                                    );
-                                    next[repIdx] = pick;
-                                    return next;
-                                  });
-                                  setReplacingIndex(null);
-                                  continueToNextRound();
-                                }}
-                              >
-                                <div className="text-xs font-semibold">
-                                  {owned.name}
-                                </div>
-                                <div className="text-[10px] opacity-75">
-                                  {owned.tier}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                          <button
-                            className="mt-2 w-full rounded-lg bg-black/30 border border-hp-ivory/20 text-sm py-1.5 hover:brightness-110"
-                            onClick={() => setReplacingIndex(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
+                          setInventory((inv) => [...inv, p]);
+                          audio.play("boon_picked");
+                          continueAfterDraftRef.current = true;
+                          setPhase("result"); // close draft, then curtain
+                        }}
+                        onMouseEnter={() =>
+                          audio.play("general_hover", {
+                            category: "ui",
+                            oneAtATime: true,
+                          })
+                        }
+                        onFocus={() =>
+                          audio.play("general_hover", {
+                            category: "ui",
+                            oneAtATime: true,
+                          })
+                        }
+                      >
+                        Select
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -2292,7 +2299,8 @@ export default function SpellShuffle() {
                   <button
                     className="cursor-pointer rounded-lg bg-black/30 border border-hp-ivory/20 text-sm px-3 py-1.5 hover:brightness-110"
                     onClick={() => {
-                      continueToNextRound();
+                      continueAfterDraftRef.current = true;
+                      setPhase("result"); // close draft first
                       audio.play("button_click", {
                         category: "ui",
                         oneAtATime: true,
@@ -2641,94 +2649,32 @@ export default function SpellShuffle() {
                                       )}
                                     </div>
                                   </div>
-                                  {/* Target inclusion */}
-                                  <div className="rounded-lg bg-black/20 border border-hp-ivory/15 p-3">
-                                    <div className="text-xs uppercase opacity-70">
-                                      Target inclusion
-                                    </div>
-                                    <div className="mt-1 font-semibold">
-                                      ≥
-                                      {Math.round(
-                                        modPreview.base.minFrac * 100
-                                      )}
-                                      %
-                                      {modPreview.mod.minFrac !==
-                                        modPreview.base.minFrac && (
-                                        <>
-                                          {" "}
-                                          →{" "}
-                                          <span className="text-emerald-300">
-                                            ≥
-                                            {Math.round(
-                                              modPreview.mod.minFrac * 100
-                                            )}
-                                            %
-                                          </span>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                  {/* Spotlight duration */}
-                                  <div className="rounded-lg bg-black/20 border border-hp-ivory/15 p-3">
-                                    <div className="text-xs uppercase opacity-70">
-                                      Spotlight duration
-                                    </div>
-                                    <div className="mt-1 font-semibold">
-                                      {(
-                                        modPreview.base.revealMs / 1000
-                                      ).toFixed(1)}
-                                      s
-                                      {modPreview.mod.revealMs !==
-                                        modPreview.base.revealMs && (
-                                        <>
-                                          {" "}
-                                          →{" "}
-                                          <span className="text-emerald-300">
-                                            {(
-                                              modPreview.mod.revealMs / 1000
-                                            ).toFixed(1)}
-                                            s
-                                          </span>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
                                   {/* Points math */}
+
                                   <div className="rounded-lg bg-black/20 border border-hp-ivory/15 p-3">
                                     <div className="text-xs uppercase opacity-70">
                                       Points (per correct)
                                     </div>
                                     <div className="mt-1 font-semibold">
-                                      {modPreview.base.speedMult.toFixed(1)}x{" "}
-                                      <span className="opacity-70">×</span>{" "}
-                                      {modPreview.base.powMult.toFixed(2)}{" "}
+                                      Base {modPreview.base.baseMult.toFixed(1)}{" "}
+                                      <span className="opacity-70">+</span>{" "}
+                                      Speed{" "}
+                                      {modPreview.mod.speedBonus.toFixed(1)}{" "}
                                       <span className="opacity-70">=</span>{" "}
-                                      <span>
-                                        {modPreview.base.totalPoints
-                                          ? modPreview.base.totalPoints.toFixed(
-                                              1
-                                            )
-                                          : (
-                                              modPreview.base.speedMult *
-                                              modPreview.base.powMult
-                                            ).toFixed(1)}
-                                        x
-                                      </span>
-                                      {(modPreview.base.speedMult !==
-                                        modPreview.mod.speedMult ||
-                                        modPreview.base.powMult !==
-                                          modPreview.mod.powMult) && (
+                                      {(
+                                        modPreview.base.baseMult +
+                                        modPreview.mod.speedBonus
+                                      ).toFixed(1)}
+                                      x
+                                      {modPreview.mod.powMult !== 1 && (
                                         <>
                                           {" "}
-                                          →{" "}
                                           <span className="text-emerald-300">
-                                            {modPreview.mod.speedMult.toFixed(
-                                              1
-                                            )}
-                                            x{" "}
+                                            {" "}
                                             <span className="opacity-70">
                                               ×
                                             </span>{" "}
+                                            POWER{" "}
                                             {modPreview.mod.powMult.toFixed(2)}{" "}
                                             <span className="opacity-70">
                                               =
@@ -2739,7 +2685,8 @@ export default function SpellShuffle() {
                                       )}
                                     </div>
                                     <div className="text-xs opacity-80">
-                                      Speed multiplier × Power-up bonus
+                                      Base by Difficulty, Speed, and Power-up
+                                      bonus
                                     </div>
                                   </div>
                                 </div>
