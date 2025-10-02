@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
 import HpButton from "../../components/hp-button";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -1201,6 +1207,68 @@ export default function SpellShuffle() {
     return () => window.removeEventListener("keydown", onKey);
   }, [phase]);
 
+  // Cursor-parallax for the background (translate + tilt)
+  // Background parallax (scroll repeating pattern opposite to deck)
+  const bgX = useMotionValue(0);
+  const bgY = useMotionValue(0);
+  const bgXSpring = useSpring(bgX, { stiffness: 120, damping: 20, mass: 0.5 });
+  const bgYSpring = useSpring(bgY, { stiffness: 120, damping: 20, mass: 0.5 });
+  const bgPosition = useMotionTemplate`${bgXSpring}px ${bgYSpring}px`;
+
+  useEffect(() => {
+    const isFinePointer =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(pointer: fine)").matches;
+    const active = !isStarting && phase !== "init" && phase !== "draft";
+
+    function resetBg() {
+      bgX.set(0);
+      bgY.set(0);
+    }
+
+    if (!isFinePointer) {
+      resetBg();
+      return;
+    }
+
+    const maxBgShift = 12; // px
+    let raf = 0;
+    let nx = 0;
+    let ny = 0;
+
+    const update = () => {
+      raf = 0;
+      // Opposite-direction background scroll for depth
+      bgX.set(nx * -maxBgShift);
+      bgY.set(ny * -maxBgShift);
+    };
+
+    function onMove(e) {
+      if (!active) {
+        resetBg();
+        return;
+      }
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      nx = (e.clientX - cx) / cx; // -1..1
+      ny = (e.clientY - cy) / cy; // -1..1
+      if (!raf) raf = requestAnimationFrame(update);
+    }
+
+    function onLeave() {
+      resetBg();
+    }
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseleave", onLeave);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseleave", onLeave);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [isStarting, phase]);
+
   // 1) Enhanced assets loading screen (now also hosts Start button)
   if (showLoading) {
     const pct = total ? Math.round((progress / total) * 100) : 0;
@@ -1323,7 +1391,12 @@ export default function SpellShuffle() {
   return (
     <main>
       <div className="relative min-h-screen flex items-center flex-col justify-center bg-hp-royal px-6 md:px-12 overflow-x-hidden">
-        <div className="absolute inset-0 bg-[url('/images/bg.png')] bg-repeat bg-auto opacity-20 pointer-events-none" />
+        <motion.div
+          className="absolute inset-0 bg-[url('/images/bg.png')] bg-repeat bg-auto opacity-20 pointer-events-none"
+          style={{
+            backgroundPosition: bgPosition, // cursor-parallax on pattern
+          }}
+        />
 
         {/* INIT: Hero title screen */}
         <AnimatePresence mode="wait" initial={true}>
@@ -2041,6 +2114,7 @@ export default function SpellShuffle() {
               twoRowsMd
                 ? "md:grid-rows-2 md:grid-flow-col md:place-content-center"
                 : "md:grid-rows-1 md:grid-flow-col md:place-content-center",
+              "transform-gpu",
             ].join(" ")}
           >
             {/* NEW: render only the first visibleCount cards during 'enter' */}
