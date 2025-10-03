@@ -595,8 +595,8 @@ const Journal = () => {
 
       <motion.div
         className="flex justify-center items-center w-full h-[100vh] py-10 pt-17 bg-[url('/images/towers.png')] bg-no-repeat bg-cover bg-center"
-        initial={{ opacity: 0, y: 6, filter: "blur(2px)" }}
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        initial={{ opacity: 0, filter: "blur(2px)" }}
+        animate={{ opacity: 1, filter: "blur(0px)" }}
         transition={{ duration: 0.35, ease: "easeOut" }}
       >
         <div className="flex flex-col self-center">
