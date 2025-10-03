@@ -10,7 +10,6 @@ import DoodleCircle from "./doodlecircle";
 import MagicSpark from "./magicspark";
 import { getBookById, getMovieById } from "../repository/booksAndMovies";
 import MagicSplash from "./magic-splash";
-
 import { AnimatePresence, motion } from "framer-motion";
 
 const Journal = () => {
@@ -37,8 +36,6 @@ const Journal = () => {
     }
   };
 
-  const [minHoldDone, setMinHoldDone] = useState(false); // ensure >= 2s splash
-
   useEffect(() => {
     async function load() {
       try {
@@ -51,6 +48,8 @@ const Journal = () => {
     if (type && id) load();
   }, [type, id]);
 
+  const [minHoldDone, setMinHoldDone] = useState(false);
+
   // Minimum hold for splash and reset on route change
   useEffect(() => {
     setMinHoldDone(false);
@@ -60,9 +59,8 @@ const Journal = () => {
 
   const showSplash = !entity || !minHoldDone;
 
-  // Show splash until both: data is ready AND 2s has elapsed
   if (showSplash) {
-    return <MagicSplash show={true} title="MAGICAL JOURNAL" />;
+    return <MagicSplash show />;
   }
 
   // ⚡ Pages depending on type
@@ -567,78 +565,50 @@ const Journal = () => {
   const tabs = Object.keys(currentPages);
 
   return (
-    <div className="flex justify-center items-center w-full min-h-[100vh] pt-30 md:pt-5 bg-[url('/images/towers.png')] bg-no-repeat bg-cover">
-      <div className="flex flex-col self-center">
-        {/* Tabs + Back on Mobile */}
-        <div className="flex flex-col md:flex-row items-center justify-between w-full md:w-fit mt-2 md:mt-10 -mb-2 px-2 gap-2">
-          {/* Tabs */}
-          <div className="flex flex-wrap justify-center md:justify-start">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`relative px-6 py-2 font-bold transition-transform duration-200 border-l-1 border-black/10 bg-hp-ivory w-fit rounded-t-lg cursor-pointer
+    <main className="relative min-h-screen">
+      <AnimatePresence initial={false}>
+        {showSplash && (
+          <motion.div
+            key="journal-splash"
+            className="fixed inset-0 z-[70]"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
+            <MagicSplash show={true} title="MAGICAL JOURNAL" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        className="flex justify-center items-center w-full h-[100vh] py-10 pt-17 bg-[url('/images/towers.png')] bg-no-repeat bg-cover bg-center"
+        initial={{ opacity: 0, filter: "blur(2px)" }}
+        animate={{ opacity: 1, filter: "blur(0px)" }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      >
+        <div className="flex flex-col self-center">
+          {/* Tabs + Back on Mobile */}
+          <div className="flex relative flex-col md:flex-row items-center justify-between w-full md:w-fit mt-2 md:mt-10 -mb-2 px-2 gap-2">
+            {/* Tabs */}
+            <div className="flex flex-wrap justify-center md:justify-start">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`relative px-6 py-2 font-bold transition-transform duration-200 border-l-1 border-black/10 bg-hp-ivory w-fit rounded-t-lg cursor-pointer
               ${
                 activeTab === tab
                   ? "text-hp-royal bg-[#cdac73] shadow-inner -translate-y-1"
                   : "text-yellow-900 hover:-translate-y-1"
               }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {/* Back Bookmark (Mobile Top Right) */}
-          <button
-            onClick={() => {
-              const target =
-                type === "book" || type === "movie"
-                  ? "books-and-movies"
-                  : `${type}s`;
-              navigate(`/${target}`);
-            }}
-            className="md:hidden absolute top-40 right-20 z-30 w-8 h-30 bg-hp-royal shadow-md 
-    rounded-bl-lg rounded-br-lg flex items-center justify-center cursor-pointer
-    text-hp-ivory font-bold tracking-wide text-sm
-    transition-all duration-300 hover:shadow-lg [writing-mode:vertical-rl] [text-orientation:upright]"
-          >
-            BACK <ArrowDown size={15} className="mt-2" />
-          </button>
-        </div>
-
-        {/* Journal */}
-        <div className="relative w-[450px] overflow-y-auto custom-scroll md:w-[900px] h-[800px] md:h-[600px] flex flex-col md:flex-row rounded-lg shadow-2xl border-8 border-[#4a3728] bg-hp-ivory overflow-hidden">
-          {/* Spine (Desktop Only) */}
-          <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-1 bg-[#3a2b20] shadow-inner z-20"></div>
-
-          {/* Left page */}
-          <div className="w-full md:w-1/2 relative flex flex-col p-6 md:p-8 text-[#2a1d14] bg-[#E1CBA5]">
-            <div className="absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-black/15 to-transparent z-10 md:block hidden" />
-            <OrnateCorner className="absolute top-0 left-0" />
-            <OrnateCorner className="absolute top-0 right-0 rotate-90" />
-            <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
-            <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
-            <MagicSpark className="absolute bottom-10 right-6 -rotate-20 hidden md:block" />
-            <div className="overflow-y-auto relative z-20 custom-scroll">
-              {currentPages[activeTab]?.left}
-            </div>
-          </div>
-
-          {/* Right page */}
-          <div className="w-full md:w-1/2 relative flex flex-col p-6 md:p-8 text-[#2a1d14] bg-[#E1CBA5]">
-            <div className="absolute left-0 top-0 h-full w-12 bg-gradient-to-r from-black/15 to-transparent z-10 md:block hidden" />
-            <OrnateCorner className="absolute top-0 left-0" />
-            <OrnateCorner className="absolute top-0 right-0 rotate-90" />
-            <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
-            <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
-            <Scribble className="absolute bottom-10 right-12 rotate-12 hidden md:block" />
-            <DoodleCircle className="absolute bottom-20 left-6 rotate-3 hidden md:block" />
-            <div className="overflow-y-auto relative z-20 custom-scroll">
-              {currentPages[activeTab]?.right}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
 
-            {/* Back Bookmark (Desktop Only) */}
+            {/* Back Bookmark (Mobile Top Right) */}
             <button
               onClick={() => {
                 const target =
@@ -647,18 +617,68 @@ const Journal = () => {
                     : `${type}s`;
                 navigate(`/${target}`);
               }}
-              className="hidden md:flex absolute top-0 right-1 z-30 w-6 h-40 bg-hp-royal shadow-md 
-           rounded-bl-lg rounded-br-lg items-center justify-center cursor-pointer
-           text-hp-ivory font-semibold tracking-wider origin-bottom 
-           transition-all duration-300 hover:h-50 hover:shadow-lg
-           [writing-mode:vertical-rl] [text-orientation:upright]"
+              className="md:hidden absolute top-10 right-10 z-30 w-8 h-30 bg-hp-royal shadow-md 
+              rounded-bl-lg rounded-br-lg flex items-center justify-center cursor-pointer
+              text-hp-ivory font-bold tracking-wide text-sm
+              transition-all duration-300 hover:shadow-lg [writing-mode:vertical-rl] [text-orientation:upright]"
             >
               BACK <ArrowDown size={15} className="mt-2" />
             </button>
           </div>
+
+          {/* Journal */}
+          <div className="relative max-w-[300px] overflow-y-auto custom-scroll w-full md:max-w-[900px] h-[800px] md:h-[600px] flex flex-col md:flex-row rounded-lg shadow-2xl border-8 border-[#4a3728] bg-hp-ivory overflow-hidden">
+            {/* Spine (Desktop Only) */}
+            <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-1 bg-[#3a2b20] shadow-inner z-20"></div>
+
+            {/* Left page */}
+            <div className="w-full md:w-1/2 relative flex flex-col p-6 md:p-8 text-[#2a1d14] bg-[#E1CBA5]">
+              <div className="absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-black/15 to-transparent z-10 md:block hidden" />
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <MagicSpark className="absolute bottom-10 right-6 -rotate-20 hidden md:block" />
+              <div className="overflow-y-auto relative z-20 custom-scroll">
+                {currentPages[activeTab]?.left}
+              </div>
+            </div>
+
+            {/* Right page */}
+            <div className="w-full md:w-1/2 relative flex flex-col p-6 md:p-8 text-[#2a1d14] bg-[#E1CBA5]">
+              <div className="absolute left-0 top-0 h-full w-12 bg-gradient-to-r from-black/15 to-transparent z-10 md:block hidden" />
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <Scribble className="absolute bottom-10 right-12 rotate-12 hidden md:block" />
+              <DoodleCircle className="absolute bottom-20 left-6 rotate-3 hidden md:block" />
+              <div className="overflow-y-auto relative z-20 custom-scroll">
+                {currentPages[activeTab]?.right}
+              </div>
+
+              {/* Back Bookmark (Desktop Only) */}
+              <button
+                onClick={() => {
+                  const target =
+                    type === "book" || type === "movie"
+                      ? "books-and-movies"
+                      : `${type}s`;
+                  navigate(`/${target}`);
+                }}
+                className="hidden md:flex absolute top-0 right-1 z-30 w-6 h-40 bg-hp-royal shadow-md 
+           rounded-bl-lg rounded-br-lg items-center justify-center cursor-pointer
+           text-hp-ivory font-semibold tracking-wider origin-bottom 
+           transition-all duration-300 hover:h-50 hover:shadow-lg
+           [writing-mode:vertical-rl] [text-orientation:upright]"
+              >
+                BACK <ArrowDown size={15} className="mt-2" />
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </main>
   );
 };
 
