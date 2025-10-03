@@ -10,7 +10,8 @@ import DoodleCircle from "./doodlecircle";
 import MagicSpark from "./magicspark";
 import { getBookById, getMovieById } from "../repository/booksAndMovies";
 import MagicSplash from "./magic-splash";
-import { AnimatePresence } from "framer-motion";
+
+import { AnimatePresence, motion } from "framer-motion";
 
 const Journal = () => {
   const { type, id } = useParams(); // URL looks like /journal/:type/:id
@@ -57,8 +58,10 @@ const Journal = () => {
     return () => clearTimeout(t);
   }, [type, id]);
 
+  const showSplash = !entity || !minHoldDone;
+
   // Show splash until both: data is ready AND 2s has elapsed
-  if (!entity || !minHoldDone) {
+  if (showSplash) {
     return <MagicSplash show={true} title="MAGICAL JOURNAL" />;
   }
 
@@ -573,82 +576,101 @@ const Journal = () => {
   const currentPages = pagesByType[type] || {};
   const tabs = Object.keys(currentPages);
 
-   return (
-     <main className="relative min-h-screen">
-     <AnimatePresence initial={false}>
-       {showSplash && (
-         <motion.div
-           key="journal-splash"
-           className="fixed inset-0 z-[70]"
-           initial={{ opacity: 1 }}
-           animate={{ opacity: 1 }}
-           exit={{ opacity: 0 }}
-           transition={{ duration: 0.35, ease: "easeOut" }}
-         >
-           <MagicSplash show={true} title="MAGICAL JOURNAL" />
-         </motion.div>
-       )}
-     </AnimatePresence>
+  return (
+    <main className="relative min-h-screen">
+      <AnimatePresence initial={false}>
+        {showSplash && (
+          <motion.div
+            key="journal-splash"
+            className="fixed inset-0 z-[70]"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
+            <MagicSplash show={true} title="MAGICAL JOURNAL" />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-     <motion.div
-       className="flex justify-center items-center w-full h-[100vh] py-10 pt-17 bg-[url('/images/towers.png')] bg-no-repeat bg-cover bg-center"
-       initial={{ opacity: 0, y: 6, filter: "blur(2px)" }}
-       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-       transition={{ duration: 0.35, ease: "easeOut" }}
-     >
-
-        {/* Journal */}
-        <div className="relative w-[900px] h-[600px] flex rounded-lg shadow-2xl border-8 border-[#4a3728] bg-hp-ivory">
-          {/* Spine */}
-          <div className="absolute top-0 bottom-0 left-1/2 w-1 bg-[#3a2b20] shadow-inner z-20"></div>
-
-          {/* Left page */}
-          <div className="w-1/2 relative flex flex-col p-8 text-[#2a1d14] bg-[#E1CBA5]">
-            <div className="absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-black/15 to-transparent z-10" />
-            <OrnateCorner className="absolute top-0 left-0" />
-            <OrnateCorner className="absolute top-0 right-0 rotate-90" />
-            <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
-            <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
-            <MagicSpark className="absolute bottom-30 right-6 -rotate-20" />
-            <div className="overflow-y-auto relative z-20 custom-scroll">
-              {currentPages[activeTab]?.left}
-            </div>
+      <motion.div
+        className="flex justify-center items-center w-full h-[100vh] py-10 pt-17 bg-[url('/images/towers.png')] bg-no-repeat bg-cover bg-center"
+        initial={{ opacity: 0, y: 6, filter: "blur(2px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      >
+        <div className="flex flex-col self-center">
+          {/* Tabs */}
+          <div className="flex w-fit mt-10 -mb-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`relative px-6 py-2 font-bold transition-transform duration-200 border-l-1 border-black/10 bg-hp-ivory w-fit rounded-t-lg cursor-pointer
+              ${
+                activeTab === tab
+                  ? "text-hp-royal bg-[#cdac73] shadow-inner -translate-y-1"
+                  : "text-yellow-900 hover:-translate-y-1"
+              }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
-          {/* Right page */}
-          <div className="w-1/2 relative flex flex-col p-8 text-[#2a1d14] bg-[#E1CBA5]">
-            <div className="absolute left-0 top-0 h-full w-12 bg-gradient-to-r from-black/15 to-transparent z-10" />
-            <OrnateCorner className="absolute top-0 left-0" />
-            <OrnateCorner className="absolute top-0 right-0 rotate-90" />
-            <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
-            <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
-            <Scribble className="absolute bottom-10 right-12 rotate-12" />
-            <DoodleCircle className="absolute bottom-45 left-6 rotate-3" />
-            <div className="overflow-y-auto relative z-20 custom-scroll">
-              {currentPages[activeTab]?.right}
+          {/* Journal */}
+          <div className="relative w-[900px] h-[600px] flex rounded-lg shadow-2xl border-8 border-[#4a3728] bg-hp-ivory">
+            {/* Spine */}
+            <div className="absolute top-0 bottom-0 left-1/2 w-1 bg-[#3a2b20] shadow-inner z-20"></div>
+
+            {/* Left page */}
+            <div className="w-1/2 relative flex flex-col p-8 text-[#2a1d14] bg-[#E1CBA5]">
+              <div className="absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-black/15 to-transparent z-10" />
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <MagicSpark className="absolute bottom-30 right-6 -rotate-20" />
+              <div className="overflow-y-auto relative z-20 custom-scroll">
+                {currentPages[activeTab]?.left}
+              </div>
             </div>
 
-            {/* Bookmark back */}
-            <button
-              onClick={() => {
-                const target =
-                  type === "book" || type === "movie"
-                    ? "books-and-movies"
-                    : `${type}s`;
-                navigate(`/${target}`);
-              }}
-              className="absolute top-0 right-1 z-30 w-6 h-40 bg-hp-royal shadow-md 
+            {/* Right page */}
+            <div className="w-1/2 relative flex flex-col p-8 text-[#2a1d14] bg-[#E1CBA5]">
+              <div className="absolute left-0 top-0 h-full w-12 bg-gradient-to-r from-black/15 to-transparent z-10" />
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <Scribble className="absolute bottom-10 right-12 rotate-12" />
+              <DoodleCircle className="absolute bottom-45 left-6 rotate-3" />
+              <div className="overflow-y-auto relative z-20 custom-scroll">
+                {currentPages[activeTab]?.right}
+              </div>
+
+              {/* Bookmark back */}
+              <button
+                onClick={() => {
+                  const target =
+                    type === "book" || type === "movie"
+                      ? "books-and-movies"
+                      : `${type}s`;
+                  navigate(`/${target}`);
+                }}
+                className="absolute top-0 right-1 z-30 w-6 h-40 bg-hp-royal shadow-md 
              rounded-bl-lg rounded-br-lg flex items-center justify-center cursor-pointer
              text-hp-ivory font-semibold tracking-wider origin-bottom 
              transition-all duration-300 hover:h-50 hover:shadow-lg
              [writing-mode:vertical-rl] [text-orientation:upright]"
-            >
-              BACK <ArrowDown size={15} className="mt-2" />
-            </button>
+              >
+                BACK <ArrowDown size={15} className="mt-2" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </main>
   );
 };
 
