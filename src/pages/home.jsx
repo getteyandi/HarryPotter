@@ -5,7 +5,6 @@ import SectionDetail from "../components/sectiondetail";
 import HpButton from "../components/hp-button";
 import HpCard from "../components/hp-card";
 import Deck from "../components/deck";
-import Topbar from "../components/topBar";
 
 export default function Home() {
   return (

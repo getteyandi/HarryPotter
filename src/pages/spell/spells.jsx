@@ -94,7 +94,7 @@ export default function SpellsPage() {
       <div className="relative min-h-screen bg-hp-royal pt-20 px-12 overflow-x-hidden">
         <div className="absolute inset-0 bg-[url('/images/bg.png')] bg-repeat bg-auto opacity-25 pointer-events-none" />
         <div className="relative z-10 flex flex-wrap gap-6 justify-center max-w-7xl mx-auto py-16">
-          <CharactersSpread cards={cards} />
+          <CharactersSpread cards={cards} type="spell" />
         </div>
         <div ref={loadMoreRef} className="h-10" />
         {loading && (

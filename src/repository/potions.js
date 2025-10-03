@@ -17,7 +17,20 @@ function cleanPotions(potions) {
 
 function formatPotions(
   potions,
-  fields = ["name", "image", "difficulty", "effect", "ingredients"]
+  fields = [
+    "slug",
+    "name",
+    "image",
+    "difficulty",
+    "effect",
+    "ingredients",
+    "side_effects",
+    "characteristics",
+    "time",
+    "inventors",
+    "manufacturers",
+    "wiki",
+  ]
 ) {
   return potions.map((p) => {
     const attrs = p.attributes || {};
@@ -27,10 +40,12 @@ function formatPotions(
     });
     return {
       id: p.id,
+      type: p.type, // keep type too if needed
       ...formatted,
     };
   });
 }
+
 
 /**
  * Fetch one page (no cross-page fill).
@@ -57,6 +72,7 @@ export async function getPotions(page = 1, size = 20, fields) {
 export async function getPotionById(
   id,
   fields = [
+    "slug",
     "name",
     "image",
     "difficulty",
@@ -65,6 +81,8 @@ export async function getPotionById(
     "side_effects",
     "characteristics",
     "time",
+    "inventors",
+    "manufacturers",
   ]
 ) {
   const cacheKey = `potion-${id}-fields-${fields.join(",")}`;

@@ -1,22 +1,440 @@
-// components/Journal.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowDown } from "lucide-react";
+import { getCharacterById } from "../repository/characters";
+import { getSpellById } from "../repository/spells";
+import { getPotionById } from "../repository/potions";
+import OrnateCorner from "./ornate";
+import Scribble from "./scribble";
+import DoodleCircle from "./doodlecircle";
+import MagicSpark from "./magicspark";
+import { getBookById, getMovieById } from "../repository/booksAndMovies";
 
-const Journal = ({ pages }) => {
-  const [activeTab, setActiveTab] = useState(Object.keys(pages)[0]);
+const Journal = () => {
+  const { type, id } = useParams(); // URL looks like /journal/:type/:id
+  const navigate = useNavigate();
+  const [entity, setEntity] = useState(null);
+  const [activeTab, setActiveTab] = useState("Overview");
+
+  // ✅ Fetch based on type
+  const fetchData = async (type, id) => {
+    switch (type) {
+      case "character":
+        return await getCharacterById(id);
+      case "spell":
+        return await getSpellById(id);
+      case "potion":
+        return await getPotionById(id);
+      case "book":
+        return await getBookById(id);
+      case "movie":
+        return await getMovieById(id);
+      default:
+        throw new Error(`Unsupported type: ${type}`);
+    }
+  };
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await fetchData(type, id);
+        setEntity(data);
+      } catch (err) {
+        console.error(`Failed to fetch ${type}:`, err);
+      }
+    }
+    if (type && id) load();
+  }, [type, id]);
+
+  if (!entity) {
+    return (
+      <div className="flex justify-center items-center h-full text-hp-darkgray">
+        Loading...
+      </div>
+    );
+  }
+
+  // ⚡ Pages depending on type
+  const pagesByType = {
+    character: {
+      Overview: {
+        left: (
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-64 h-80 flex items-center justify-center border-4 border-[#c49a6c] shadow-xl">
+              <div className="absolute inset-2 border-2 border-[#c49a6c]" />
+              <div className="absolute inset-4 border border-[#c49a6c]" />
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <img
+                src={entity.image}
+                alt={entity.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-center">{entity.name}</h2>
+              <p>
+                <span className="font-bold">Born:</span>{" "}
+                {entity.born || "Unknown"}
+              </p>
+              <p>
+                <span className="font-bold">House:</span> {entity.house || "—"}
+              </p>
+              <p>
+                <span className="font-bold">Species:</span> {entity.species}
+              </p>
+              <p>
+                <span className="font-bold">Gender:</span> {entity.gender}
+              </p>
+            </div>
+          </div>
+        ),
+        right: (
+          <div className="space-y-2 mx-5">
+            {entity.aliasNames?.length > 0 && (
+              <p>
+                <span className="font-bold">Also known as:</span>{" "}
+                {entity.aliasNames.join(", ")}
+              </p>
+            )}
+            <p>
+              <span className="font-bold">Died:</span> {entity.died || "—"}
+            </p>
+            <p>
+              <span className="font-bold">Blood Status:</span>{" "}
+              {entity.bloodStatus || "Unknown"}
+            </p>
+            <p>
+              <span className="font-bold">Eye Color:</span>{" "}
+              {entity.eyeColor || "Unknown"}
+            </p>
+            <p>
+              <span className="font-bold">Hair Color:</span>{" "}
+              {entity.hairColor || "Unknown"}
+            </p>
+            <p>
+              <span className="font-bold">Skin Color:</span>{" "}
+              {entity.skinColor || "Unknown"}
+            </p>
+            <p>
+              <span className="font-bold">Nationality:</span>{" "}
+              {entity.nationality || "Unknown"}
+            </p>
+          </div>
+        ),
+      },
+      Magic: {
+        left: (
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-64 h-80 flex items-center justify-center border-4 border-[#c49a6c] shadow-xl">
+              <div className="absolute inset-2 border-2 border-[#c49a6c]" />
+              <div className="absolute inset-4 border border-[#c49a6c]" />
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <img
+                src={entity.image}
+                alt={entity.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className=" w-full">
+              <h2 className="text-2xl font-bold text-center">{entity.name}</h2>
+              <p>
+                <span className="font-bold">Patronus:</span>{" "}
+                {entity.patronus || "None"}
+              </p>
+              <p>
+                <span className="font-bold">Boggart:</span>{" "}
+                {entity.boggart || "Unknown"}
+              </p>
+              <p>
+                <span className="font-bold">Animagus:</span>{" "}
+                {entity.animagus || "None"}
+              </p>
+            </div>
+          </div>
+        ),
+        right: (
+          <div className="space-y-2 mx-5">
+            <p>
+              <span className="font-bold">Wands:</span>{" "}
+              {entity.wands?.join(", ") || "No known wand"}
+            </p>
+            {entity.jobs?.length > 0 && (
+              <div>
+                <span className="font-bold">Jobs:</span>
+                <ul className="list-disc ml-5">
+                  {entity.jobs.map((job, i) => (
+                    <li key={i}>{job}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ),
+      },
+      Family: {
+        left: (
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-64 h-80 flex items-center justify-center border-4 border-[#c49a6c] shadow-xl">
+              <div className="absolute inset-2 border-2 border-[#c49a6c]" />
+              <div className="absolute inset-4 border border-[#c49a6c]" />
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <img
+                src={entity.image}
+                alt={entity.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className=" w-full">
+              <h2 className="text-2xl font-bold text-center">{entity.name}</h2>
+              <h3 className="font-bold">Romances</h3>
+              {entity.romances?.length ? (
+                <ul className="list-disc ml-5">
+                  {entity.romances.map((r, i) => (
+                    <li key={i}>{r}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No recorded romances.</p>
+              )}
+            </div>
+          </div>
+        ),
+        right: (
+          <div className="space-y-2 mx-5">
+            <h3 className="font-bold">Family Members</h3>
+            {entity.familyMembers?.length ? (
+              <ul className="list-disc ml-5">
+                {entity.familyMembers.map((fam, i) => (
+                  <li key={i}>{fam}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>No recorded family members.</p>
+            )}
+          </div>
+        ),
+      },
+    },
+
+    spell: {
+      Overview: {
+        left: (
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-64 h-80 border-4 border-[#c49a6c] shadow-xl">
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <img
+                src={entity.image}
+                alt={entity.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-center">{entity.name}</h2>
+              <p>
+                <span className="font-bold">Incantation:</span>
+                {entity.incantation || " Unknown"}
+              </p>
+            </div>
+          </div>
+        ),
+        right: (
+          <div className="space-y-2 mx-5">
+            <p>
+              <span className="font-bold">Category:</span> {entity.category}
+            </p>
+            <p>
+              <span className="font-bold">Effect:</span> {entity.effect}
+            </p>
+            <p>
+              <span className="font-bold">Light:</span> {entity.light || "—"}
+            </p>
+            <p>
+              <span className="font-bold">Creator:</span>{" "}
+              {entity.creator || "Unknown"}
+            </p>
+            <p>
+              <span className="font-bold">Hand Movement:</span>{" "}
+              {entity.hand || "None"}
+            </p>
+            <p>
+              <a
+                href={entity.wiki}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-700 underline"
+              >
+                Read More
+              </a>
+            </p>
+          </div>
+        ),
+      },
+    },
+
+    potion: {
+      Overview: {
+        left: (
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-64 h-80 border-4 border-[#c49a6c] shadow-xl">
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <img
+                src={entity.image}
+                alt={entity.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <h2 className="text-2xl font-bold">{entity.name}</h2>
+          </div>
+        ),
+        right: (
+          <div className="mx-5 space-y-2">
+            <p>
+              <span className="font-bold">Characteristics:</span>{" "}
+              {entity.characteristics || "Unknown"}
+            </p>
+            <p>
+              <span className="font-bold">Difficulty:</span>{" "}
+              {entity.difficulty || "Unknown"}
+            </p>
+            <p>
+              <span className="font-bold">Effect:</span>{" "}
+              {entity.effect || "Unknown"}
+            </p>
+            {entity.ingredients && (
+              <p>
+                <span className="font-bold">Ingredients:</span>{" "}
+                {entity.ingredients}
+              </p>
+            )}
+            {entity.side_effects && (
+              <p>
+                <span className="font-bold">Side Effects:</span>{" "}
+                {entity.side_effects}
+              </p>
+            )}
+            {entity.time && (
+              <p>
+                <span className="font-bold">Time:</span> {entity.time}
+              </p>
+            )}
+            {entity.inventors && (
+              <p>
+                <span className="font-bold">Inventors:</span> {entity.inventors}
+              </p>
+            )}
+            {entity.manufacturers && (
+              <p>
+                <span className="font-bold">Manufacturers:</span>{" "}
+                {entity.manufacturers}
+              </p>
+            )}
+          </div>
+        ),
+      },
+    },
+
+    book: {
+      Overview: {
+        left: (
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-64 h-80 border-4 border-[#c49a6c] shadow-xl">
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <img
+                src={entity.image}
+                alt={entity.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <h2 className="text-2xl font-bold">{entity.title}</h2>
+          </div>
+        ),
+        right: (
+          <div className="mx-5">
+            <p>
+              <span className="font-bold">Author:</span> {entity.author}
+            </p>
+            <p>
+              <span className="font-bold">Release Date:</span>{" "}
+              {entity.releaseDate}
+            </p>
+            <p>
+              <span className="font-bold">Summary:</span> {entity.summary}
+            </p>
+          </div>
+        ),
+      },
+    },
+
+    movie: {
+      Overview: {
+        left: (
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-64 h-80 border-4 border-[#c49a6c] shadow-xl">
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <img
+                src={entity.image}
+                alt={entity.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <h2 className="text-2xl font-bold">{entity.title}</h2>
+          </div>
+        ),
+        right: (
+          <div className="mx-5">
+            <p>
+              <span className="font-bold">Director:</span> {entity.director}
+            </p>
+            <p>
+              <span className="font-bold">Release Date:</span>{" "}
+              {entity.releaseDate}
+            </p>
+            <p>
+              <span className="font-bold">Summary:</span> {entity.summary}
+            </p>
+          </div>
+        ),
+      },
+    },
+  };
+
+  const currentPages = pagesByType[type] || {};
+  const tabs = Object.keys(currentPages);
 
   return (
-    <div className="flex justify-center items-center w-full">
+    <div className="flex justify-center items-center w-full h-[100vh] py-10 pt-17 bg-[url('/images/towers.png')] bg-[calc(50%+50px)_120px] bg-[length:89%]">
       <div className="flex flex-col self-center">
-        {/* Tabs above the journal */}
-        <div className="flex w-fit mt-10 -mb-2 ">
-          {Object.keys(pages).map((tab) => (
+        {/* Tabs */}
+        <div className="flex w-fit mt-10 -mb-2">
+          {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`relative px-6 py-2 font-bold transition-transform duration-200 border-l-1 border-black/10 bg-hp-ivory w-fit rounded-t-lg
+              className={`relative px-6 py-2 font-bold transition-transform duration-200 border-l-1 border-black/10 bg-hp-ivory w-fit rounded-t-lg cursor-pointer
               ${
                 activeTab === tab
-                  ? "text-hp-royal bg-[#cdac73] shadow-inner"
+                  ? "text-hp-royal bg-[#cdac73] shadow-inner -translate-y-1"
                   : "text-yellow-900 hover:-translate-y-1"
               }`}
             >
@@ -24,23 +442,49 @@ const Journal = ({ pages }) => {
             </button>
           ))}
         </div>
+
         {/* Journal */}
         <div className="relative w-[900px] h-[600px] flex rounded-lg shadow-2xl border-8 border-[#4a3728] bg-hp-ivory">
           {/* Spine */}
           <div className="absolute top-0 bottom-0 left-1/2 w-1 bg-[#3a2b20] shadow-inner z-20"></div>
 
-          {/* Left Page */}
-          <div className="w-1/2 relative flex flex-col p-6 text-[#2a1d14] bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] bg-repeat">
-            {/* Page shadow */}
-            <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-r from-transparent to-black/20 pointer-events-none" />
-            <div className="overflow-y-auto">{pages[activeTab].left}</div>
+          {/* Left page */}
+          <div className="w-1/2 relative flex flex-col p-8 text-[#2a1d14] bg-[#E1CBA5]">
+            <div className="absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-black/15 to-transparent z-10" />
+            <OrnateCorner className="absolute top-0 left-0" />
+            <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+            <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+            <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+            <MagicSpark className="absolute bottom-30 right-6 -rotate-20" />
+            <div className="overflow-y-auto relative z-20 custom-scroll">
+              {currentPages[activeTab]?.left}
+            </div>
           </div>
 
-          {/* Right Page */}
-          <div className="w-1/2 relative flex flex-col p-6 text-hp-darkgray bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] bg-repeat">
-            {/* Page shadow */}
-            <div className="absolute left-0 top-0 h-full w-8 bg-gradient-to-l from-transparent to-black/20 pointer-events-none" />
-            <div className="overflow-y-auto">{pages[activeTab].right}</div>
+          {/* Right page */}
+          <div className="w-1/2 relative flex flex-col p-8 text-[#2a1d14] bg-[#E1CBA5]">
+            <div className="absolute left-0 top-0 h-full w-12 bg-gradient-to-r from-black/15 to-transparent z-10" />
+            <OrnateCorner className="absolute top-0 left-0" />
+            <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+            <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+            <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+            <Scribble className="absolute bottom-10 right-12 rotate-12" />
+            <DoodleCircle className="absolute bottom-45 left-6 rotate-3" />
+            <div className="overflow-y-auto relative z-20 custom-scroll">
+              {currentPages[activeTab]?.right}
+            </div>
+
+            {/* Bookmark back */}
+            <button
+              onClick={() => navigate(`/${type}s`)}
+              className="absolute top-0 right-1 z-30 w-6 h-40 bg-hp-royal shadow-md 
+             rounded-bl-lg rounded-br-lg flex items-center justify-center cursor-pointer
+             text-hp-ivory font-semibold tracking-wider origin-bottom 
+             transition-all duration-300 hover:h-50 hover:shadow-lg
+             [writing-mode:vertical-rl] [text-orientation:upright]"
+            >
+              BACK <ArrowDown size={15} className="mt-2" />
+            </button>
           </div>
         </div>
       </div>

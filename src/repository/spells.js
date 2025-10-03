@@ -17,7 +17,7 @@ function cleanSpells(spells) {
 
 function formatSpells(
   spells,
-  fields = ["name", "image", "incantation", "category", "effect"]
+  fields = ["name", "image", "incantation", "category", "effect", "light", "creator", "hand"]
 ) {
   return spells.map((spell) => {
     const attrs = spell.attributes;

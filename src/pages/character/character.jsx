@@ -79,7 +79,7 @@ export default function Character() {
 
         {/* Cards container */}
         <div className="relative z-10 flex flex-wrap gap-6 justify-center max-w-7xl mx-auto py-16">
-          <CharactersSpread cards={cards} />
+          <CharactersSpread cards={cards} type="character" />
         </div>
 
         {/* Trigger for infinite scroll */}
