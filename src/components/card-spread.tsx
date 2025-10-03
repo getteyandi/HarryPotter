@@ -90,10 +90,8 @@ export default function CardSpread({
     prevCount.current = cards.length;
   }, [api, cards]);
 
-  const handleCardClick = (card: Card) => {
-    if (onCardClick) return onCardClick(card);
-    // Default route keeps existing behavior for characters
-    navigate(`/char-info/${card.id}`);
+  const handleCardClick = (id: string, type: string) => {
+    navigate(`/journal/${type}/${id}`);
   };
 
   return (
@@ -167,7 +165,9 @@ export default function CardSpread({
               type={resolvedType as any}
               houseName={houseName}
               className="cursor-pointer"
-              onClick={() => handleCardClick(card)}
+              onClick={() => {
+                handleCardClick(cards[idx].id, resolvedType as string);
+              }}
             />
           </animated.div>
         );

@@ -26,7 +26,7 @@ export default function MagicSplash({
       {show && (
         <motion.div
           key="magic-splash"
-          className="fixed inset-0 z-[120] grid place-items-center pointer-events-auto"
+          className="fixed inset-0 z-[500] grid place-items-center pointer-events-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

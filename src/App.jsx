@@ -2,7 +2,6 @@ import { Route, Routes } from "react-router-dom";
 import Topbar from "./components/topBar";
 import Character from "./pages/character/character.jsx";
 import Home from "./pages/home.jsx";
-import CharInfo from "./pages/character/character-info/char-info.jsx";
 import ForbiddenDraw from "./pages/forbidden-draw/ForbiddenDraw.js";
 import BooksAndMovies from "./pages/books-and-movies/books-and-movies.jsx";
 import Spells from "./pages/spell/spells.jsx";

@@ -9,6 +9,7 @@ import Scribble from "./scribble";
 import DoodleCircle from "./doodlecircle";
 import MagicSpark from "./magicspark";
 import { getBookById, getMovieById } from "../repository/booksAndMovies";
+import MagicSplash from "./magic-splash";
 
 const Journal = () => {
   const { type, id } = useParams(); // URL looks like /journal/:type/:id
@@ -34,6 +35,8 @@ const Journal = () => {
     }
   };
 
+  const [minHoldDone, setMinHoldDone] = useState(false); // ensure >= 2s splash
+
   useEffect(() => {
     async function load() {
       try {
@@ -46,12 +49,16 @@ const Journal = () => {
     if (type && id) load();
   }, [type, id]);
 
-  if (!entity) {
-    return (
-      <div className="flex justify-center items-center h-full text-hp-darkgray">
-        Loading...
-      </div>
-    );
+  // Minimum hold for splash and reset on route change
+  useEffect(() => {
+    setMinHoldDone(false);
+    const t = setTimeout(() => setMinHoldDone(true), 2000);
+    return () => clearTimeout(t);
+  }, [type, id]);
+
+  // Show splash until both: data is ready AND 2s has elapsed
+  if (!entity || !minHoldDone) {
+    return <MagicSplash show={true} title="MAGICAL JOURNAL" />;
   }
 
   // ⚡ Pages depending on type
@@ -566,7 +573,7 @@ const Journal = () => {
   const tabs = Object.keys(currentPages);
 
   return (
-    <div className="flex justify-center items-center w-full h-[100vh] py-10 pt-17 bg-[url('/images/towers.png')] bg-[calc(50%+50px)_120px] bg-[length:89%]">
+    <div className="flex justify-center items-center w-full h-[100vh] py-10 pt-17 bg-[url('/images/towers.png')] bg-no-repeat bg-cover bg-center">
       <div className="flex flex-col self-center">
         {/* Tabs */}
         <div className="flex w-fit mt-10 -mb-2">

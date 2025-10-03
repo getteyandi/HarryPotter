@@ -151,6 +151,11 @@ export default function BooksAndMovies() {
       return (
         <div
           key={item.id}
+          onClick={() =>
+            navigate(
+              `/journal/${mediaType === "books" ? "book" : "movie"}/${item.id}`
+            )
+          }
           className="group relative rounded-xl overflow-hidden border border-hp-ivory/15 bg-hp-royal/30 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all"
         >
           <div className="aspect-[3/4] w-full overflow-hidden bg-hp-royal/50">

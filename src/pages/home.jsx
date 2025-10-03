@@ -9,9 +9,17 @@ import Topbar from "../components/topBar";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import MagicSplash from "../components/magic-splash";
+import { useNavigate } from "react-router-dom";
+import { getBooks } from "../repository/booksAndMovies";
+import { getSpells } from "../repository/spells";
 
 export default function Home() {
   const [ready, setReady] = useState(false);
+  const [books, setBooks] = useState([]);
+  const [spells, setSpells] = useState([]);
+  const [loadingBooks, setLoadingBooks] = useState(true);
+  const [loadingSpells, setLoadingSpells] = useState(true);
+  const navigate = useNavigate();
   const assets = useMemo(
     () => [
       "public/images/hero.png",
@@ -79,6 +87,70 @@ export default function Home() {
       transition: { delayChildren: delay, staggerChildren: interval },
     },
   });
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        setLoadingBooks(true);
+        const data = await getBooks(1, 60, ["title", "release_date", "cover"]);
+        if (alive) setBooks(data);
+      } catch (e) {
+        console.warn("Books load failed", e);
+      } finally {
+        if (alive) setLoadingBooks(false);
+      }
+    })();
+
+    (async () => {
+      try {
+        setLoadingSpells(true);
+        const data = await getSpells(1, 60, [
+          "name",
+          "image",
+          "category",
+          "effect",
+          "incantation",
+        ]);
+        if (alive) setSpells(data);
+      } catch (e) {
+        console.warn("Spells load failed", e);
+      } finally {
+        if (alive) setLoadingSpells(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const pickRandom = (arr, n) => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a.slice(0, n);
+  };
+
+  const randomBooks = useMemo(() => pickRandom(books, 4), [books]);
+  const randomSpells = useMemo(() => pickRandom(spells, 4), [spells]);
+
+  // Map API items to DeckCard shape; swap to potions when you fetch them
+  const deckCards = useMemo(
+    () =>
+      randomSpells.map((s) => ({
+        id: s.id,
+        image: s.image || "/images/hero.png",
+        name: s.name, // Deck normalizes this to mainInfo
+        firstDetail: s.effect, // shown on the card
+        secondDetail: s.category, // shown on the card
+        type: "spell",
+      })),
+    [randomSpells]
+  );
 
   return (
     <main className="relative">
@@ -216,35 +288,65 @@ export default function Home() {
                       description="Browse the complete Harry Potter book series and cinematic adventures. Relive every spellbinding chapter and magical moment."
                     />
                   </motion.div>
+                  {/* Grid of 4 random books – consistent with Books & Movies cards */}
                   <motion.div
-                    className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full "
-                    variants={stagger(0.1, 0.1)}
+                    className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full"
+                    variants={stagger(0.08, 0.1)}
                   >
-                    <motion.div variants={fadeUp}>
-                      <HpCard
-                        title="Harry Potter and the Philosopher's Stone"
-                        imageUrl="https://www.wizardingworld.com/images/products/books/UK/rectangle-1.jpg"
-                      />
-                    </motion.div>
-                    <motion.div variants={fadeUp}>
-                      <HpCard
-                        title="Harry Potter and the Chamber of Secrets"
-                        imageUrl="https://www.wizardingworld.com/images/products/books/UK/rectangle-2.jpg"
-                      />
-                    </motion.div>
-                    <motion.div variants={fadeUp}>
-                      <HpCard
-                        title="Harry Potter and the Prisoner of Azkaban"
-                        imageUrl="https://www.wizardingworld.com/images/products/books/UK/rectangle-3.jpg"
-                      />
-                    </motion.div>
-                    <motion.div variants={fadeUp}>
-                      <HpCard
-                        title="Harry Potter and the Goblet of Fire"
-                        imageUrl="https://www.wizardingworld.com/images/products/books/UK/rectangle-4.jpg"
-                      />
-                    </motion.div>
+                    {(loadingBooks
+                      ? Array.from({ length: 4 })
+                      : randomBooks
+                    ).map((item, i) => (
+                      <motion.div key={item?.id ?? `sk-${i}`} variants={fadeUp}>
+                        <div
+                          onClick={() =>
+                            item && navigate(`/journal/book/${item.id}`)
+                          }
+                          className="group relative rounded-xl overflow-hidden border border-hp-ivory/15 bg-hp-royal/30 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all cursor-pointer"
+                        >
+                          <div className="aspect-[3/4] w-full overflow-hidden bg-hp-royal/50">
+                            {item ? (
+                              <>
+                                <img
+                                  src={item.cover}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                                  loading="lazy"
+                                  decoding="async"
+                                />
+                                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent opacity-80" />
+                              </>
+                            ) : (
+                              <div className="w-full h-full bg-hp-royal/40 animate-pulse" />
+                            )}
+                          </div>
+                          <div className="p-4 flex flex-col gap-1">
+                            {item ? (
+                              <>
+                                <h3
+                                  className="text-hp-ivory font-semibold text-sm line-clamp-2"
+                                  title={item.title}
+                                >
+                                  {item.title}
+                                </h3>
+                                {item.release_date && (
+                                  <p className="text-xs text-hp-ivory/60">
+                                    {new Date(item.release_date).getFullYear()}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <div className="h-3.5 w-3/4 bg-white/10 rounded animate-pulse" />
+                                <div className="h-3 w-1/3 bg-white/10 rounded animate-pulse" />
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
                   </motion.div>
+
                   <motion.div
                     className="w-full flex items-center  justify-center"
                     variants={fadeUp}
@@ -294,7 +396,13 @@ export default function Home() {
                       />
                     </motion.div>
                     <motion.div variants={slideRight}>
-                      <Deck />
+                      <Deck
+                        cards={deckCards}
+                        onCardClick={(card) => {
+                          // Navigate to the correct journal page
+                          navigate(`/journal/${card.type}/${card.id}`);
+                        }}
+                      />
                     </motion.div>
                   </div>
                 </motion.div>

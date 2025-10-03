@@ -64,12 +64,12 @@ function formatCharacters(characters, fields = ["name", "house", "image"]) {
 //   return formatted;
 // }
 
-export async function getCharacterById(id) {
-  const response = await fetch(`${API_BASE}/characters/${id}`);
-  if (!response.ok) throw new Error("Failed to fetch character");
-  const data = await response.json();
-  return data.data;
-}
+// export async function getCharacterById(id) {
+//   const response = await fetch(`${API_BASE}/characters/${id}`);
+//   if (!response.ok) throw new Error("Failed to fetch character");
+//   const data = await response.json();
+//   return data.data;
+// }
 
 // NEW for Filtering/Sorting/Search
 /**
