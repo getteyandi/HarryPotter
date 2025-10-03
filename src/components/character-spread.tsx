@@ -57,7 +57,7 @@ export default function CharactersSpread({
             houseName={cards[idx].house?.toLowerCase()}
             className="cursor-pointer"
             onClick={() => {
-              console.log("Card clicked:", cards[idx].id); // ✅ will log only when clicked
+              console.log("Card clicked:", cards[idx].id); // will log only when clicked
               handleCardClick(cards[idx].id);
             }}
           />
