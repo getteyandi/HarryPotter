@@ -10,6 +10,7 @@ import DoodleCircle from "./doodlecircle";
 import MagicSpark from "./magicspark";
 import { getBookById, getMovieById } from "../repository/booksAndMovies";
 import MagicSplash from "./magic-splash";
+import { AnimatePresence } from "framer-motion";
 
 const Journal = () => {
   const { type, id } = useParams(); // URL looks like /journal/:type/:id
@@ -572,26 +573,29 @@ const Journal = () => {
   const currentPages = pagesByType[type] || {};
   const tabs = Object.keys(currentPages);
 
-  return (
-    <div className="flex justify-center items-center w-full h-[100vh] py-10 pt-17 bg-[url('/images/towers.png')] bg-no-repeat bg-cover bg-center">
-      <div className="flex flex-col self-center">
-        {/* Tabs */}
-        <div className="flex w-fit mt-10 -mb-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`relative px-6 py-2 font-bold transition-transform duration-200 border-l-1 border-black/10 bg-hp-ivory w-fit rounded-t-lg cursor-pointer
-              ${
-                activeTab === tab
-                  ? "text-hp-royal bg-[#cdac73] shadow-inner -translate-y-1"
-                  : "text-yellow-900 hover:-translate-y-1"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+   return (
+     <main className="relative min-h-screen">
+     <AnimatePresence initial={false}>
+       {showSplash && (
+         <motion.div
+           key="journal-splash"
+           className="fixed inset-0 z-[70]"
+           initial={{ opacity: 1 }}
+           animate={{ opacity: 1 }}
+           exit={{ opacity: 0 }}
+           transition={{ duration: 0.35, ease: "easeOut" }}
+         >
+           <MagicSplash show={true} title="MAGICAL JOURNAL" />
+         </motion.div>
+       )}
+     </AnimatePresence>
+
+     <motion.div
+       className="flex justify-center items-center w-full h-[100vh] py-10 pt-17 bg-[url('/images/towers.png')] bg-no-repeat bg-cover bg-center"
+       initial={{ opacity: 0, y: 6, filter: "blur(2px)" }}
+       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+       transition={{ duration: 0.35, ease: "easeOut" }}
+     >
 
         {/* Journal */}
         <div className="relative w-[900px] h-[600px] flex rounded-lg shadow-2xl border-8 border-[#4a3728] bg-hp-ivory">
