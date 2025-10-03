@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, Square, SquareArrowUpRight } from "lucide-react";
 import { getCharacterById } from "../repository/characters";
 import { getSpellById } from "../repository/spells";
 import { getPotionById } from "../repository/potions";
@@ -358,22 +358,31 @@ const Journal = () => {
               <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
               <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
               <img
-                src={entity.image}
+                src={entity.cover || entity.image}
                 alt={entity.title}
                 className="w-full h-full object-cover"
               />
             </div>
-            <h2 className="text-2xl font-bold">{entity.title}</h2>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-2xl text-center font-bold">{entity.title}</h2>
+              <p>
+                <span className="font-bold">Author:</span> {entity.author}
+              </p>
+              <p>
+                <span className="font-bold">Release Date:</span>{" "}
+                {entity.release_date}
+              </p>
+              <p>
+                <span className="font-bold">Pages:</span> {entity.pages}
+              </p>
+            </div>
           </div>
         ),
         right: (
-          <div className="mx-5">
+          <div className="mx-5 flex flex-col gap-2">
             <p>
-              <span className="font-bold">Author:</span> {entity.author}
-            </p>
-            <p>
-              <span className="font-bold">Release Date:</span>{" "}
-              {entity.releaseDate}
+              <span className="font-bold">Dedication:</span>{" "}
+              {entity.dedication || "—"}
             </p>
             <p>
               <span className="font-bold">Summary:</span> {entity.summary}
@@ -393,26 +402,160 @@ const Journal = () => {
               <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
               <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
               <img
-                src={entity.image}
+                src={entity.poster}
                 alt={entity.title}
                 className="w-full h-full object-cover"
               />
             </div>
-            <h2 className="text-2xl font-bold">{entity.title}</h2>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-2xl font-bold text-center">{entity.title}</h2>
+              <p>
+                <span className="font-bold">Release Date:</span>{" "}
+                {entity.release_date}
+              </p>
+              <p>
+                <span className="font-bold">Rating:</span> {entity.rating}
+              </p>
+              <p>
+                <span className="font-bold">Running Time:</span>{" "}
+                {entity.running_time}
+              </p>
+            </div>
           </div>
         ),
         right: (
-          <div className="mx-5">
+          <div className="mx-5 flex flex-col gap-2">
             <p>
-              <span className="font-bold">Director:</span> {entity.director}
+              <span className="font-bold">Budget:</span> {entity.budget}
             </p>
             <p>
-              <span className="font-bold">Release Date:</span>{" "}
-              {entity.releaseDate}
+              <span className="font-bold">Box Office:</span> {entity.box_office}
             </p>
             <p>
               <span className="font-bold">Summary:</span> {entity.summary}
             </p>
+          </div>
+        ),
+      },
+      Filmmakers: {
+        left: (
+          <div className=" flex items-center flex-col gap-2">
+            <div className="relative w-64 h-80 border-4 border-[#c49a6c] shadow-xl">
+              <OrnateCorner className="absolute top-0 left-0" />
+              <OrnateCorner className="absolute top-0 right-0 rotate-90" />
+              <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
+              <OrnateCorner className="absolute bottom-0 left-0 -rotate-90" />
+              <img
+                src={entity.poster}
+                alt={entity.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-2xl font-bold text-center">{entity.title}</h2>
+              {entity.directors?.length > 0 && (
+                <p>
+                  <span className="font-bold">
+                    Director{entity.directors.length > 1 ? "s" : ""}:
+                  </span>{" "}
+                  {entity.directors.join(", ")}
+                </p>
+              )}
+            </div>
+          </div>
+        ),
+        right: (
+          <div className="mx-5 flex flex-col gap-2">
+            {entity.producers?.length > 0 && (
+              <div>
+                <span className="font-bold">
+                  Producer{entity.producers.length > 1 ? "s" : ""}:
+                </span>
+                <ul className="list-disc list-inside ml-4">
+                  {entity.producers.map((producer, i) => (
+                    <li key={i}>{producer}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {entity.cinematographers?.length > 0 && (
+              <div>
+                <span className="font-bold">
+                  Cinematographer{entity.cinematographers.length > 1 ? "s" : ""}
+                  :
+                </span>
+                <ul className="list-disc list-inside ml-4">
+                  {entity.cinematographers.map((cinema, i) => (
+                    <li key={i}>{cinema}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {entity.editors?.length > 0 && (
+              <div>
+                <span className="font-bold">
+                  Editor{entity.editors.length > 1 ? "s" : ""}:
+                </span>
+                <ul className="list-disc list-inside ml-4">
+                  {entity.editors.map((editor, i) => (
+                    <li key={i}>{editor}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {entity.music_composers?.length > 0 && (
+              <div>
+                <span className="font-bold">
+                  Music Composer{entity.music_composers.length > 1 ? "s" : ""}:
+                </span>
+                <ul className="list-disc list-inside ml-4">
+                  {entity.music_composers.map((composer, i) => (
+                    <li key={i}>{composer}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {entity.screenwriters?.length > 0 && (
+              <div>
+                <span className="font-bold">
+                  Screenwriter{entity.screenwriters.length > 1 ? "s" : ""}:
+                </span>
+                <ul className="list-disc list-inside ml-4">
+                  {entity.screenwriters.map((writer, i) => (
+                    <li key={i}>{writer}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {entity.distributors?.length > 0 && (
+              <div>
+                <span className="font-bold">
+                  Distributor{entity.distributors.length > 1 ? "s" : ""}:
+                </span>
+                <ul className="list-disc list-inside ml-4">
+                  {entity.distributors.map((dist, i) => (
+                    <li key={i}>{dist}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {entity.trailer && (
+              <p className="flex items-center gap-1">
+                <span className="font-bold">Trailer:</span>{" "}
+                <a
+                  href={entity.trailer}
+                  target="_blank"
+                  className="flex items-center gap-1 text-blue-950 hover:text-hp-royal"
+                >
+                  Watch Here <SquareArrowUpRight size={12} />
+                </a>
+              </p>
+            )}
           </div>
         ),
       },
@@ -476,7 +619,13 @@ const Journal = () => {
 
             {/* Bookmark back */}
             <button
-              onClick={() => navigate(`/${type}s`)}
+              onClick={() => {
+                const target =
+                  type === "book" || type === "movie"
+                    ? "books-and-movies"
+                    : `${type}s`;
+                navigate(`/${target}`);
+              }}
               className="absolute top-0 right-1 z-30 w-6 h-40 bg-hp-royal shadow-md 
              rounded-bl-lg rounded-br-lg flex items-center justify-center cursor-pointer
              text-hp-ivory font-semibold tracking-wider origin-bottom 

@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ added
 import { getBooks, getMovies } from "../../repository/booksAndMovies";
 
 export default function BooksAndMovies() {
+  const navigate = useNavigate(); // ✅ added
   const [mediaType, setMediaType] = useState("books"); // 'books' | 'movies'
 
   const [books, setBooks] = useState([]);
@@ -130,7 +132,7 @@ export default function BooksAndMovies() {
         <div className="relative z-10 flex justify-center gap-4 mb-10">
           <button
             onClick={() => switchType("books")}
-            className={`px-6 py-2 rounded-full font-semibold transition-colors ${
+            className={`px-6 py-2 rounded-full font-semibold cursor-pointer transition-colors ${
               mediaType === "books"
                 ? "bg-hp-ivory text-hp-royal"
                 : "bg-hp-royal/40 border border-hp-ivory/20 text-hp-ivory"
@@ -140,7 +142,7 @@ export default function BooksAndMovies() {
           </button>
           <button
             onClick={() => switchType("movies")}
-            className={`px-6 py-2 rounded-full font-semibold transition-colors ${
+            className={`px-6 py-2 rounded-full font-semibold cursor-pointer transition-colors ${
               mediaType === "movies"
                 ? "bg-hp-ivory text-hp-royal"
                 : "bg-hp-royal/40 border border-hp-ivory/20 text-hp-ivory"
@@ -157,7 +159,14 @@ export default function BooksAndMovies() {
             return (
               <div
                 key={item.id}
-                className="group relative rounded-xl overflow-hidden border border-hp-ivory/15 bg-hp-royal/30 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all"
+                onClick={() =>
+                  navigate(
+                    `/journal/${mediaType === "books" ? "book" : "movie"}/${
+                      item.id
+                    }`
+                  )
+                }
+                className="group relative rounded-xl overflow-hidden border border-hp-ivory/15 bg-hp-royal/30 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all cursor-pointer"
               >
                 <div className="aspect-[3/4] w-full overflow-hidden bg-hp-royal/50">
                   {image ? (
