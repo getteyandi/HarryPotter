@@ -351,8 +351,8 @@ const Journal = () => {
     book: {
       Overview: {
         left: (
-          <div className="flex flex-col items-center gap-2">
-            <div className="relative w-64 h-80 border-4 border-[#c49a6c] shadow-xl">
+          <div className="flex flex-col items-center gap-1">
+            <div className="relative w-64 h-89 border-4 border-[#c49a6c] shadow-xl">
               <OrnateCorner className="absolute top-0 left-0" />
               <OrnateCorner className="absolute top-0 right-0 rotate-90" />
               <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
@@ -360,7 +360,7 @@ const Journal = () => {
               <img
                 src={entity.cover || entity.image}
                 alt={entity.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-fit"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -395,8 +395,8 @@ const Journal = () => {
     movie: {
       Overview: {
         left: (
-          <div className="flex flex-col items-center gap-2">
-            <div className="relative w-64 h-80 border-4 border-[#c49a6c] shadow-xl">
+          <div className="flex flex-col items-center gap-1">
+            <div className="relative w-64 h-89 border-4 border-[#c49a6c] shadow-xl">
               <OrnateCorner className="absolute top-0 left-0" />
               <OrnateCorner className="absolute top-0 right-0 rotate-90" />
               <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
@@ -404,7 +404,7 @@ const Journal = () => {
               <img
                 src={entity.poster}
                 alt={entity.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-fit"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -439,8 +439,8 @@ const Journal = () => {
       },
       Filmmakers: {
         left: (
-          <div className=" flex items-center flex-col gap-2">
-            <div className="relative w-64 h-80 border-4 border-[#c49a6c] shadow-xl">
+          <div className=" flex items-center flex-col gap-1">
+            <div className="relative w-64 h-89 border-4 border-[#c49a6c] shadow-xl">
               <OrnateCorner className="absolute top-0 left-0" />
               <OrnateCorner className="absolute top-0 right-0 rotate-90" />
               <OrnateCorner className="absolute bottom-0 right-0 rotate-180" />
@@ -448,7 +448,7 @@ const Journal = () => {
               <img
                 src={entity.poster}
                 alt={entity.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-fit"
               />
             </div>
             <div className="flex flex-col gap-2">
