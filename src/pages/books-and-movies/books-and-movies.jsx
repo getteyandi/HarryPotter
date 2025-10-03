@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ added
 import { getBooks, getMovies } from "../../repository/booksAndMovies";
 import { motion } from "framer-motion";
 
 export default function BooksAndMovies() {
+  const navigate = useNavigate(); // ✅ added
   const [mediaType, setMediaType] = useState("books"); // 'books' | 'movies'
 
   const [books, setBooks] = useState([]);

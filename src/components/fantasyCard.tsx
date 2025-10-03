@@ -25,6 +25,7 @@ const FantasyCard: React.FC<FantasyCardProps> = ({
   type = "house",
   houseName,
   className,
+  onClick,
 }) => {
   const renderIcon = () => {
     if (type === "potion") {
@@ -77,6 +78,7 @@ const FantasyCard: React.FC<FantasyCardProps> = ({
 
   return (
     <div
+      onClick={onClick}
       className={
         `relative group w-64 h-102 flex p-2 items-center rounded-2xl shadow-2xl border-3 border-[#593811] bg-[#35291C] overflow-hidden hover:scale-105 transition-transform duration-300` +
         (className ? ` ${className}` : "")

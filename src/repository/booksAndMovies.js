@@ -7,9 +7,9 @@ function cleanBooks(items) {
   return items.filter((b) => {
     const title = b.attributes.title?.trim() || "";
     if (!title) return false;
-    if (title.length > 120) return false;
+    // if (title.length > 120) return false;
     // Require a cover image if present (optional: relax if you want all)
-    if (!b.attributes.cover) return false;
+    // if (!b.attributes.cover) return false;
     return true;
   });
 }
@@ -48,7 +48,16 @@ async function fetchPage(resource, page = 1, size = 20) {
 export async function getBooks(
   page = 1,
   size = 20,
-  fields = ["title", "release_date", "pages", "cover"]
+  fields = [
+    "slug",
+    "title",
+    "author",
+    "dedication",
+    "release_date",
+    "pages",
+    "summary",
+    "cover",
+  ]
 ) {
   const cacheKey = `books-${page}-${size}-fields-${fields.join(",")}`;
   const cached = getCache(cacheKey);
@@ -63,7 +72,15 @@ export async function getBooks(
 
 export async function getBookById(
   id,
-  fields = ["title", "release_date", "pages", "cover", "summary"]
+  fields = [
+    "title",
+    "author",
+    "dedication",
+    "release_date",
+    "pages",
+    "summary",
+    "cover",
+  ]
 ) {
   const cacheKey = `book-${id}-fields-${fields.join(",")}`;
   const cached = getCache(cacheKey);
@@ -81,7 +98,24 @@ export async function getBookById(
 export async function getMovies(
   page = 1,
   size = 20,
-  fields = ["title", "release_date", "running_time", "rating", "poster"]
+  fields = [
+    "title",
+    "release_date",
+    "running_time",
+    "budget",
+    "box_office",
+    "rating",
+    "poster",
+    "cinematographers",
+    "directors",
+    "distributors",
+    "editors",
+    "music_composers",
+    "producers",
+    "screenwriters",
+    "summary",
+    "trailer",
+  ]
 ) {
   const cacheKey = `movies-${page}-${size}-fields-${fields.join(",")}`;
   const cached = getCache(cacheKey);
@@ -104,6 +138,15 @@ export async function getMovieById(
     "box_office",
     "rating",
     "poster",
+    "cinematographers",
+    "directors",
+    "distributors",
+    "editors",
+    "music_composers",
+    "producers",
+    "screenwriters",
+    "summary",
+    "trailer",
   ]
 ) {
   const cacheKey = `movie-${id}-fields-${fields.join(",")}`;
