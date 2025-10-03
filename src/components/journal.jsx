@@ -268,16 +268,6 @@ const Journal = () => {
               <span className="font-bold">Hand Movement:</span>{" "}
               {entity.hand || "None"}
             </p>
-            <p>
-              <a
-                href={entity.wiki}
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-700 underline"
-              >
-                Read More
-              </a>
-            </p>
           </div>
         ),
       },
@@ -602,7 +592,7 @@ const Journal = () => {
     text-hp-ivory font-bold tracking-wide text-sm
     transition-all duration-300 hover:shadow-lg [writing-mode:vertical-rl] [text-orientation:upright]"
           >
-            BACK
+            BACK <ArrowDown size={15} className="mt-2" />
           </button>
         </div>
 
