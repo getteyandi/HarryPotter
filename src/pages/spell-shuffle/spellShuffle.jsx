@@ -321,8 +321,14 @@ export default function SpellShuffle() {
     "guess",
     "draft",
   ]);
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const isSpellShuffle = pathname.startsWith("/spell-shuffle");
+  // Force intro gate when ?intro is present in the URL (from Home CTA)
+  const forceIntroGate = useMemo(
+    () => new URLSearchParams(search).has("intro"),
+    [search]
+  );
+  const [introGateDone, setIntroGateDone] = useState(!forceIntroGate);
   const [musicVolume, setMusicVolume] = useState(0.6);
   const [musicMuted, setMusicMuted] = useState(false);
   const [musicPopoverOpen, setMusicPopoverOpen] = useState(false);
@@ -501,7 +507,8 @@ export default function SpellShuffle() {
     imageUrls: imageAssets,
   });
   const loadingTip = LOADING_TIPS[(progress || 0) % LOADING_TIPS.length];
-  const showLoading = !assetsReady || !minLoaderDone || !audioUnlocked; // CHANGED: keep loader until unlock
+  const showLoading =
+    !introGateDone || !assetsReady || !minLoaderDone || !audioUnlocked;
 
   // Initialize audio context, watch unlock
   useEffect(() => {
@@ -512,10 +519,18 @@ export default function SpellShuffle() {
     return () => off && off();
   }, [musicMuted, musicVolume]);
 
-  // Start/stop OST based on route + readiness + unlock (do not switch on volume changes)
+  // Start/stop OST based on route + readiness + unlock (robust re-entry)
   useEffect(() => {
+    const intendedKey =
+      isSpellShuffle && assetsReady && audioUnlocked
+        ? phase === "init"
+          ? "ost_title"
+          : "ost_game"
+        : null;
+
     audio.whenUnlocked(() => {
-      if (!isSpellShuffle || !assetsReady || !audioUnlocked) {
+      // Left the route → stop Spell Shuffle music
+      if (!isSpellShuffle) {
         if (
           audio.music.current &&
           ["ost_game", "ost_title"].includes(audio.music.current.key)
@@ -525,19 +540,39 @@ export default function SpellShuffle() {
         return;
       }
 
-      // Only start if nothing is playing yet; choose by phase.
-      if (!audio.music.current) {
-        const initialKey = phase === "init" ? "ost_title" : "ost_game";
-        if (canPlay(initialKey)) {
-          audio.playMusic(initialKey, {
-            fadeMs: 250,
+      // Not ready or still locked → ensure no OST is lingering
+      if (!assetsReady || !audioUnlocked) {
+        if (
+          audio.music.current &&
+          ["ost_game", "ost_title"].includes(audio.music.current.key)
+        ) {
+          audio.music.current.stop(250);
+        }
+        return;
+      }
+
+      // Ready: ensure the correct track is playing (don’t rely on current being null)
+      if (intendedKey && canPlay(intendedKey)) {
+        if (audio.music.current?.key !== intendedKey) {
+          crossfadeMusicSafe(intendedKey, {
+            fadeMs: 450,
+            loop: true,
+            volume: musicMuted ? 0 : musicVolume,
+          });
+        } else if (
+          audio.music.current &&
+          audio.music.current.isPlaying === false
+        ) {
+          // Edge case: manager kept a stopped handle; resume it
+          audio.music.current.play?.({
+            fadeMs: 200,
             loop: true,
             volume: musicMuted ? 0 : musicVolume,
           });
         }
       }
     });
-  }, [isSpellShuffle, assetsReady, audioUnlocked, phase]); // NOTE: removed musicMuted/musicVolume deps
+  }, [isSpellShuffle, assetsReady, audioUnlocked, phase]); // volume handled by separate effect
 
   // Keep audio category volume in sync with UI
   useEffect(() => {
@@ -1273,7 +1308,8 @@ export default function SpellShuffle() {
   if (showLoading) {
     const pct = total ? Math.round((progress / total) * 100) : 0;
     const displayPct = assetsReady ? 100 : pct;
-    const canShowStart = assetsReady && minLoaderDone && !audioUnlocked;
+    const canShowStart =
+      assetsReady && minLoaderDone && (!audioUnlocked || !introGateDone);
 
     return (
       <main>
@@ -1368,12 +1404,14 @@ export default function SpellShuffle() {
                 onClick={async () => {
                   await audio.unlockNow();
                   setAudioUnlocked(true);
+                  setIntroGateDone(true); // acknowledge the intro gate
                 }}
                 onKeyDown={async (e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     await audio.unlockNow();
                     setAudioUnlocked(true);
+                    setIntroGateDone(true); // acknowledge the intro gate
                   }
                 }}
                 title="Enable audio"
@@ -1723,7 +1761,7 @@ export default function SpellShuffle() {
           <AnimatePresence initial={false}>
             <motion.div
               key="hud" // stable key
-              className="fixed top-3 left-1/2 -translate-x-1/2 z-30 w-full max-w-7xl"
+              className="fixed top-3 left-1/2 -translate-x-1/2 z-30 w-full max-w-7xl px-4"
               initial={{ opacity: 0, y: -8, scale: 0.98, filter: "blur(2px)" }}
               animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -6, scale: 0.98, filter: "blur(2px)" }}
@@ -1888,7 +1926,7 @@ export default function SpellShuffle() {
                   </span>
                 </div>
                 {/* Shuffles meter (grows as shuffles progress) */}
-                <div className="ml-auto min-w-[200px] flex-1 sm:flex-none">
+                <div className="ml-auto md:min-w-[200px] flex-1 sm:flex-none">
                   <div className="px-3 py-2 rounded-xl bg-black/20 border border-hp-ivory/20">
                     <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-hp-ivory/70">
                       <span>Shuffles</span>
@@ -1920,7 +1958,7 @@ export default function SpellShuffle() {
           <AnimatePresence mode="popLayout">
             <motion.div
               key="status-root" // stable: no phase/targetName to prevent remount/restart
-              className=" z-[60] mx-auto max-w-6xl px-4 fixed top-30 left-1/2 -translate-x-1/2"
+              className=" z-[60] mx-auto max-w-6xl min-w-2xl md:min-w-auto px-4 fixed top-60 md:top-40 left-1/2 -translate-x-1/2"
               initial={{ opacity: 0, y: -6, filter: "blur(2px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
@@ -1929,8 +1967,9 @@ export default function SpellShuffle() {
               <div className="flex justify-center">
                 <motion.div
                   className={[
-                    "status-chip", // NEW: base hook for CSS FX
-                    "relative overflow-visible inline-flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-lg backdrop-blur pointer-events-none",
+                    "status-chip",
+                    "relative overflow-visible inline-flex items-center gap-3 rounded-2xl border px-2 py-2 sm:px-4 sm:py-3 shadow-lg backdrop-blur pointer-events-none",
+                    "w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl",
                     phase === "result"
                       ? "bg-emerald-500/10 border-emerald-300/30 text-emerald-100"
                       : phase === "gameover"
@@ -2105,7 +2144,7 @@ export default function SpellShuffle() {
           )}
         </AnimatePresence>
         {/* Cards Grid (7 columns → two rows at 14) */}
-        <div className="relative max-w-7xl mx-auto flex flex-col items-center justify-center h-full">
+        <div className="relative max-w-7xl pt-60 md:pt-0 mx-auto flex flex-col items-center justify-center h-full">
           <motion.div
             className={[
               "grid gap-4 sm:gap-5 place-items-center",
@@ -2143,7 +2182,7 @@ export default function SpellShuffle() {
                       handleGuess(c.id);
                     }}
                     disabled={!isClickable}
-                    className={`relative block text-left active:scale-95 focus:outline-none transition-[scale,filter] ${
+                    className={`scale-50 md:scale-100 relative block text-left active:scale-95 focus:outline-none transition-[scale,filter] ${
                       phase === "guess"
                         ? "hover:brightness-120 hover:scale-[1.05] cursor-pointer"
                         : ""

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { getBooks, getMovies } from "../../repository/booksAndMovies";
+import { motion } from "framer-motion";
 
 export default function BooksAndMovies() {
   const [mediaType, setMediaType] = useState("books"); // 'books' | 'movies'
@@ -19,6 +20,17 @@ export default function BooksAndMovies() {
 
   const currentList = mediaType === "books" ? books : movies;
   const hasMore = mediaType === "books" ? hasMoreBooks : hasMoreMovies;
+
+  // Lightweight skeleton card
+  const SkeletonCard = () => (
+    <div className="relative rounded-xl overflow-hidden border border-hp-ivory/10 bg-hp-royal/20">
+      <div className="aspect-[3/4] w-full bg-hp-royal/40 animate-pulse" />
+      <div className="p-4 space-y-2">
+        <div className="h-3.5 w-3/4 bg-white/10 rounded animate-pulse" />
+        <div className="h-3 w-1/3 bg-white/10 rounded animate-pulse" />
+      </div>
+    </div>
+  );
 
   const loadBooks = useCallback(async (pageNum) => {
     setLoading(true);
@@ -121,71 +133,106 @@ export default function BooksAndMovies() {
     setMediaType(type);
   }
 
+  // Helper: render grid content (items or skeletons)
+  const renderGrid = () => {
+    const showInitialSkeletons = loading && currentList.length === 0;
+    if (showInitialSkeletons) {
+      return Array.from({ length: 12 }).map((_, i) => (
+        <SkeletonCard key={`sk-${i}`} />
+      ));
+    }
+    return currentList.map((item) => {
+      const image = item.cover || item.poster;
+      const year = item.release_date
+        ? new Date(item.release_date).getFullYear()
+        : null;
+      return (
+        <div
+          key={item.id}
+          className="group relative rounded-xl overflow-hidden border border-hp-ivory/15 bg-hp-royal/30 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all"
+        >
+          <div className="aspect-[3/4] w-full overflow-hidden bg-hp-royal/50">
+            {image ? (
+              <img
+                src={image}
+                alt={item.title}
+                className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-sm text-hp-ivory/60">
+                No Image
+              </div>
+            )}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent opacity-80" />
+          </div>
+          <div className="p-4 flex flex-col gap-1">
+            <h3
+              className="text-hp-ivory font-semibold text-sm line-clamp-2"
+              title={item.title}
+            >
+              {item.title}
+            </h3>
+            {year && <p className="text-xs text-hp-ivory/60">{year}</p>}
+          </div>
+        </div>
+      );
+    });
+  };
+
   return (
     <main>
       <div className="relative min-h-screen bg-hp-royal pt-28 px-12 overflow-x-hidden">
         <div className="absolute inset-0 bg-[url('/images/bg.png')] bg-repeat bg-auto opacity-20 pointer-events-none" />
 
-        {/* Toggle */}
-        <div className="relative z-10 flex justify-center gap-4 mb-10">
-          <button
-            onClick={() => switchType("books")}
-            className={`px-6 py-2 rounded-full font-semibold transition-colors ${
-              mediaType === "books"
-                ? "bg-hp-ivory text-hp-royal"
-                : "bg-hp-royal/40 border border-hp-ivory/20 text-hp-ivory"
-            }`}
+        {/* Segmented Tabs */}
+        <div className="relative z-10 flex justify-center mb-10">
+          <div
+            role="tablist"
+            aria-label="Select media type"
+            className="relative inline-flex items-center p-1 rounded-full bg-black/25 border border-hp-ivory/20"
           >
-            Books
-          </button>
-          <button
-            onClick={() => switchType("movies")}
-            className={`px-6 py-2 rounded-full font-semibold transition-colors ${
-              mediaType === "movies"
-                ? "bg-hp-ivory text-hp-royal"
-                : "bg-hp-royal/40 border border-hp-ivory/20 text-hp-ivory"
-            }`}
-          >
-            Movies
-          </button>
+            <motion.span
+              className="absolute inset-y-1 w-[calc(50%-4px)] rounded-full bg-hp-ivory shadow-[0_2px_14px_rgba(223,170,56,0.35)]"
+              initial={false}
+              animate={{ x: mediaType === "books" ? 0 : "100%" }}
+              transition={{ type: "spring", stiffness: 380, damping: 32 }}
+              aria-hidden
+            />
+            <button
+              role="tab"
+              aria-selected={mediaType === "books"}
+              onClick={() => switchType("books")}
+              className={[
+                "relative z-10 cursor-pointer px-6 py-2 rounded-full font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70",
+                mediaType === "books" ? "text-hp-royal" : "text-hp-ivory/80",
+              ].join(" ")}
+            >
+              Books
+            </button>
+            <button
+              role="tab"
+              aria-selected={mediaType === "movies"}
+              onClick={() => switchType("movies")}
+              className={[
+                "relative z-10 cursor-pointer px-6 py-2 rounded-full font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70",
+                mediaType === "movies" ? "text-hp-royal" : "text-hp-ivory/80",
+              ].join(" ")}
+            >
+              Movies
+            </button>
+          </div>
         </div>
 
         {/* Grid */}
         <div className="relative z-10 grid gap-6 md:grid-cols-3 lg:grid-cols-4 max-w-7xl mx-auto pb-20">
-          {currentList.map((item) => {
-            const image = item.cover || item.poster;
-            return (
-              <div
-                key={item.id}
-                className="group relative rounded-xl overflow-hidden border border-hp-ivory/15 bg-hp-royal/30 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all"
-              >
-                <div className="aspect-[3/4] w-full overflow-hidden bg-hp-royal/50">
-                  {image ? (
-                    <img
-                      src={image}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-sm text-hp-ivory/60">
-                      No Image
-                    </div>
-                  )}
-                </div>
-                <div className="p-4 flex flex-col gap-1">
-                  <h3 className="text-hp-ivory font-semibold text-sm line-clamp-2">
-                    {item.title}
-                  </h3>
-                  {item.release_date && (
-                    <p className="text-xs text-hp-ivory/60">
-                      {new Date(item.release_date).getFullYear()}
-                    </p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {renderGrid()}
+          {loading &&
+            currentList.length > 0 &&
+            Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={`more-sk-${i}`} />
+            ))}
         </div>
 
         {/* Loader trigger */}
@@ -193,8 +240,8 @@ export default function BooksAndMovies() {
 
         {/* Status */}
         <div className="relative z-10 text-center pb-16">
-          {loading && (
-            <p className="text-hp-ivory/60 animate-pulse">Loading more…</p>
+          {loading && currentList.length === 0 && (
+            <p className="text-hp-ivory/60">Loading {mediaType}…</p>
           )}
           {!loading && !hasMore && (
             <p className="text-hp-ivory/40">No more {mediaType}.</p>

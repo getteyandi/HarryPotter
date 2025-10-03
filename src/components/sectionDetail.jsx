@@ -4,22 +4,30 @@ export default function SectionDetail({
   title,
   description,
   buttonText,
+  buttonText2,
   descriptionAllignment = "text-left",
   descriptionClassName = "",
+  buttonHref = "#",
+  buttonHref2 = "#",
 }) {
   return (
     <div className="flex flex-col items-start gap-6">
       <div className={` ${descriptionClassName}`}>
-        {title && <h1 className="text-4xl font-bold mt-5">{title}</h1>}
+        {title && (
+          <h1 className="text-2xl md:text-4xl font-bold mt-5">{title}</h1>
+        )}
         {description && (
           <p
-            className={`max-w-lg text-sm text-hp-gray mt-5 ${descriptionAllignment}`}
+            className={`w-full max-w-126 text-sm text-hp-gray mt-5 ${descriptionAllignment}`}
           >
             {description}
           </p>
         )}
       </div>
-      {buttonText && <HpButton text={buttonText} />}
+      <div className="flex flex-wrap gap-4">
+        {buttonText && <HpButton text={buttonText} href={buttonHref} />}
+        {buttonText2 && <HpButton text={buttonText2} href={buttonHref2} />}
+      </div>
     </div>
   );
 }
